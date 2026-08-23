@@ -1,3 +1,6 @@
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -32,3 +35,22 @@ mongoose
   .catch((err) => {
     console.error('MongoDB connection failed:', err.message);
   });
+
+  
+app.post('/api/parse-task', async (req, res) => {
+  try {
+    const { text } = req.body;
+    
+    
+    const parsedTask = {
+      title: text,
+      description: "Parsed via Smart Task Entry",
+      priority: "Medium Priority",
+      category: "General"
+    };
+
+    res.json(parsedTask);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to parse task" });
+  }
+});
