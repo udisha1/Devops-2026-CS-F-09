@@ -3,7 +3,7 @@ import axios from 'axios'
 import TaskForm from './components/TaskForm'
 import TaskList from './components/TaskList'
 import StatsHeader from './components/StatsHeader'
-
+import ParticleText from './components/Particle';
 const API_URL = 'http://localhost:5000/api/tasks'
 
 const App = () => {
@@ -58,11 +58,29 @@ const App = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-radial-[at_25%_25%] from-white to-blue-500 to-75% py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <header className="mb-8 text-center">
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">TaskFlow</h1>
-          <p className="text-gray-500 mt-2">MERN Stack Assignment Task Manager</p>
+          <div style={{ width: '100%', height: 250, background:'linear-gradient(135deg, #09090f 0%, #1e1b4b 50%, #0f172a 100%)'}}>
+              <ParticleText
+                text="TaskFlow"
+                particleSize={2.2}
+                density={4}
+                color="#f8fafc"
+                highlightColor="#8b5cf6"
+                scatter={190}
+                gatherDuration={1600}
+                stagger={420}
+                pointerRepel={42}
+                repelRadius={120}
+                idleDrift={0.8}
+                trigger="mount"
+                fontSize="clamp(3.5rem, 13vw, 9rem)"
+                fontWeight={800}
+                fontFamily="inherit"
+                glow
+              />
+            </div>
         </header>
 
         <StatsHeader tasks={tasks} />
