@@ -1,5 +1,4 @@
-import React from 'react';
-import { CheckCircle2, Circle, Trash2 } from 'lucide-react';
+import { CheckCircle2, Circle, Trash2, Calendar } from 'lucide-react';
 
 export default function TaskCard({ task, onToggle, onDelete }) {
   const priorityColors = {
@@ -36,6 +35,12 @@ export default function TaskCard({ task, onToggle, onDelete }) {
             <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${priorityColors[task.priority]}`}>
               {task.priority}
             </span>
+            {task.dueDate && (
+              <span className="text-xs px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-full font-medium flex items-center gap-1">
+                <Calendar size={12} />
+                Due: {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              </span>
+            )}
           </div>
         </div>
       </div>

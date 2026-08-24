@@ -8,6 +8,7 @@ const API_URL = 'http://localhost:5000/api/tasks'
 
 const App = () => {
   const [tasks, setTasks] = useState([])
+  const [todayTasks, setTodayTasks] = useState([])
   const [search, setSearch] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('All')
 
@@ -23,8 +24,19 @@ const App = () => {
     }
   }
 
+  // Fetch tasks due today
+  const fetchTodayTasks = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/today`)
+      setTodayTasks(res.data)
+    } catch (err) {
+      console.error('Error fetching today\'s tasks:', err)
+    }
+  }
+
   useEffect(() => {
     fetchTasks()
+    fetchTodayTasks()
   }, [search, priorityFilter])
 
   // Add a new task
@@ -32,6 +44,7 @@ const App = () => {
     try {
       const res = await axios.post(API_URL, newTaskData)
       setTasks([res.data, ...tasks])
+      fetchTodayTasks()
     } catch (err) {
       console.error('Error adding task:', err)
     }
@@ -42,6 +55,7 @@ const App = () => {
     try {
       const res = await axios.put(`${API_URL}/${id}`, { isCompleted })
       setTasks(tasks.map((t) => (t._id === id ? res.data : t)))
+      fetchTodayTasks()
     } catch (err) {
       console.error('Error updating task:', err)
     }
@@ -52,6 +66,7 @@ const App = () => {
     try {
       await axios.delete(`${API_URL}/${id}`)
       setTasks(tasks.filter((t) => t._id !== id))
+      fetchTodayTasks()
     } catch (err) {
       console.error('Error deleting task:', err)
     }
@@ -84,6 +99,30 @@ const App = () => {
         </header>
 
         <StatsHeader tasks={tasks} />
+
+        {todayTasks.length > 0 && (
+          <div className="mb-6 p-5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl shadow-sm relative overflow-hidden">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-lg font-bold text-amber-900 flex items-center gap-2">
+                  🌅 Good Morning!
+                </h2>
+                <p className="text-sm text-amber-700 mt-1 font-medium">
+                  You have <strong>{todayTasks.length}</strong> {todayTasks.length === 1 ? 'task' : 'tasks'} due today:
+                </p>
+                <ul className="mt-3 space-y-1.5 text-sm text-amber-800">
+                  {todayTasks.map(t => (
+                    <li key={t._id} className="flex items-center gap-2 font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                      {t.title} <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold">{t.priority}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         <TaskForm onAddTask={handleAddTask} />
 
         {/* Filter Controls */}
