@@ -22,6 +22,28 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get tasks due today
+router.get('/today', async (req, res) => {
+  try {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const tasks = await Task.find({
+      isCompleted: false,
+      dueDate: {
+        $gte: todayStart,
+        $lte: todayEnd
+      }
+    });
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Create task
 router.post('/', async (req, res) => {
   try {

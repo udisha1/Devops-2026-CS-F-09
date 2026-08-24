@@ -14,5 +14,9 @@
   "type": "module",
   "devDependencies": {
     "vite": "^8.2.1"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^17.4.2"
   }
 }

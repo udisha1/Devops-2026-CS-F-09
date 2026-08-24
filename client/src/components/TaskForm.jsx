@@ -1,71 +1,66 @@
 import React, { useState } from 'react';
-import { PlusCircle } from 'lucide-react';
+import axios from 'axios';
 
 export default function TaskForm({ onAddTask }) {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: 'General',
-    priority: 'Medium',
-  });
+  const [smartText, setSmartText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSmartSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) return;
-    onAddTask(formData);
-    setFormData({ title: '', description: '', category: 'General', priority: 'Medium' });
+    if (!smartText.trim()) return;
+
+    setIsLoading(true);
+    try {
+      
+      console.log("Asking AI to parse...");
+      const aiResponse = await axios.post('http://localhost:5000/api/parse-task', {
+        text: smartText
+      });
+      
+      const parsedData = aiResponse.data;
+      console.log("AI Extracted:", parsedData);
+      
+      // Pass the parsed data to the parent component to save to MongoDB
+      if (onAddTask) {
+        await onAddTask({
+          title: parsedData.title,
+          description: "Created via AI Magic ✨",
+          priority: parsedData.priority || "Medium", 
+          category: parsedData.category || "General"          
+        });
+      }
+      setSmartText(''); 
+
+    } catch (error) {
+      console.error("AI Task Entry Error:", error);
+      alert("Error adding smart task. Check the console!");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Add New Task</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <input
-          type="text"
-          placeholder="Task title..."
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Category (e.g., Work, Study, Personal)"
-          value={formData.category}
-          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <textarea
-          placeholder="Task description (optional)"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-          rows="2"
-        />
-        <div className="flex flex-col justify-between">
-          <label className="text-sm font-medium text-gray-600 mb-1">Priority Level:</label>
-          <select
-            value={formData.priority}
-            onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white"
+    <div className="mb-8">
+      <form onSubmit={handleSmartSubmit} className="p-4 border-2 border-purple-400 rounded-lg shadow-sm bg-purple-50 mb-6">
+        <h3 className="text-lg font-bold mb-2 text-purple-800">✨ AI Task Entry</h3>
+        <div className="flex gap-2">
+          <input 
+            type="text" 
+            value={smartText}
+            onChange={(e) => setSmartText(e.target.value)}
+            placeholder="Type anything..."
+            className="flex-1 p-2 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+            disabled={isLoading}
+          />
+          <button 
+            type="submit" 
+            disabled={isLoading || !smartText.trim()}
+            className="px-6 py-2 bg-purple-600 text-white font-semibold rounded hover:bg-purple-700 disabled:opacity-50 transition"
           >
-            <option value="Low">Low Priority</option>
-            <option value="Medium">Medium Priority</option>
-            <option value="High">High Priority</option>
-          </select>
+            {isLoading ? 'Thinking...' : 'Magic Add'}
+          </button>
         </div>
-      </div>
-
-      <button
-        type="submit"
-        className="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition"
-      >
-        <PlusCircle size={18} /> Add Task
-      </button>
-    </form>
+      </form>
+    </div>
   );
 }
