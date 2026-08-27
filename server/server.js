@@ -176,7 +176,6 @@ async function sendDailyReminders() {
 
     // Optional: Send to Discord Webhook if configured in .env
     if (process.env.DISCORD_WEBHOOK_URL) {
-      const axios = require('axios');
       const embeds = tasks.map(t => {
         let color = 16776960; // Yellow (Medium)
         if (t.priority === 'High') color = 16711680; // Red (High)
@@ -188,9 +187,15 @@ async function sendDailyReminders() {
         };
       });
 
-      await axios.post(process.env.DISCORD_WEBHOOK_URL, {
-        content: "🌅 **Good Morning! Here are your tasks due today:**",
-        embeds: embeds
+      await fetch(process.env.DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          content: "🌅 **Good Morning! Here are your tasks due today:**",
+          embeds: embeds
+        })
       });
       console.log("[Scheduler] Discord notification sent successfully.");
     }
