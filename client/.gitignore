@@ -1,4 +1,4 @@
-# Logs
+
 logs
 *.log
 npm-debug.log*
@@ -12,7 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -23,16 +22,15 @@ dist-ssr
 *.sln
 *.sw?
 
-# Node dependencies
+
 node_modules/
 client/node_modules/
 server/node_modules/
 
-# Environment files
+
 .env
 server/.env
 
-# Build outputs & caches
 dist/
 build/
 .vscode/

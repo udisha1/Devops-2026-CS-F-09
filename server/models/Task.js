@@ -26,7 +26,13 @@ const TaskSchema = new mongoose.Schema(
     isCompleted: { 
       type: Boolean, 
       default: false 
-    }
+    },
+    subtasks: [
+      {
+        title: { type: String, required: true },
+        isCompleted: { type: Boolean, default: false }
+      }
+    ]
   },
   { timestamps: true }
 );
