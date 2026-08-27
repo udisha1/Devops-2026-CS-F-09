@@ -3,8 +3,20 @@ import { CheckCircle2, Circle, Trash2, Calendar, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import BorderGlow from './BorderGlow';
 
-export default function TaskCard({ task, onUpdate, onDelete }) {
+export default function TaskCard({ task, onUpdate, onDelete, themeConfig }) {
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const defaultGlowColors = ['#c084fc', '#f472b6', '#38bdf8'];
+  const defaultGlowColorRaw = '40 80 80';
+  const defaultCardBg = '#120F17';
+
+  const colors = themeConfig?.glowColors || defaultGlowColors;
+  const glowColor = themeConfig?.glowColorRaw || defaultGlowColorRaw;
+  const backgroundColor = themeConfig?.cardBg || defaultCardBg;
+
+  const totalSubtasks = task.subtasks?.length || 0;
+  const completedSubtasks = task.subtasks?.filter(sub => sub.isCompleted).length || 0;
+  const progressPercent = totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0;
 
   const priorityColors = {
     Low: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
@@ -35,26 +47,26 @@ export default function TaskCard({ task, onUpdate, onDelete }) {
   return (
     <BorderGlow
       edgeSensitivity={30}
-      glowColor="40 80 80"
-      backgroundColor="#120F17"
+      glowColor={glowColor}
+      backgroundColor={backgroundColor}
       borderRadius={28}
       glowRadius={40}
       glowIntensity={1}
       coneSpread={25}
       animated={false}
-      colors={['#c084fc', '#f472b6', '#38bdf8']}
+      colors={colors}
       className={`transition ${task.isCompleted ? 'opacity-50' : ''}`}
     >
       <div className="p-5 flex items-start justify-between gap-4 w-full">
         <div className="flex items-start gap-3 w-full">
           <button 
             onClick={() => onUpdate(task._id, { isCompleted: !task.isCompleted })}
-            className="mt-1 text-gray-400 hover:text-indigo-400 transition flex-shrink-0"
+            className="mt-1 text-slate-500 hover:text-indigo-400 transition flex-shrink-0 cursor-pointer active:scale-90 hover:scale-105 duration-200 transform"
           >
             {task.isCompleted ? (
-              <CheckCircle2 className="text-indigo-400" size={22} />
+              <CheckCircle2 className="text-indigo-400 animate-check-pop" size={22} />
             ) : (
-              <Circle size={22} />
+              <Circle size={22} className="transition-transform duration-200 hover:scale-105" />
             )}
           </button>
 
@@ -82,19 +94,36 @@ export default function TaskCard({ task, onUpdate, onDelete }) {
             {/* Subtasks List */}
             {task.subtasks && task.subtasks.length > 0 && (
               <div className="mt-4 border-t border-white/10 pt-3">
-                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Subtasks</h4>
+                <div className="flex justify-between items-center mb-1.5">
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                    Subtasks ({completedSubtasks}/{totalSubtasks})
+                  </h4>
+                  <span className="text-[10px] font-extrabold text-gray-350">{progressPercent}%</span>
+                </div>
+
+                {/* Progress Bar Container */}
+                <div className="w-full bg-white/10 rounded-full h-1.5 mb-3 overflow-hidden">
+                  <div
+                    className="h-full transition-all duration-300 ease-out rounded-full"
+                    style={{
+                      width: `${progressPercent}%`,
+                      background: `linear-gradient(90deg, ${colors[0]}, ${colors[1] || colors[0]})`
+                    }}
+                  />
+                </div>
+
                 <div className="space-y-2">
                   {task.subtasks.map((sub) => (
                     <div key={sub._id} className="flex items-center gap-2 text-sm">
                       <button
                         onClick={() => handleToggleSubtask(sub._id, !sub.isCompleted)}
                         disabled={task.isCompleted}
-                        className="text-gray-400 hover:text-indigo-400 transition flex-shrink-0"
+                        className="text-slate-500 hover:text-indigo-400 transition flex-shrink-0 cursor-pointer active:scale-90 hover:scale-105 duration-200 transform"
                       >
                         {sub.isCompleted ? (
-                          <CheckCircle2 className="text-emerald-400" size={16} />
+                          <CheckCircle2 className="text-emerald-400 animate-check-pop" size={16} />
                         ) : (
-                          <Circle size={16} />
+                          <Circle size={16} className="transition-transform duration-200 hover:scale-105" />
                         )}
                       </button>
                       <span className={`break-words ${sub.isCompleted ? 'line-through text-gray-500' : 'text-gray-200'}`}>
