@@ -4,6 +4,7 @@ import TaskForm from './components/TaskForm'
 import TaskList from './components/TaskList'
 import StatsHeader from './components/StatsHeader'
 import ParticleText from './components/Particle';
+import LiquidEther from './components/LiquidEther';
 const API_URL = 'http://localhost:5000/api/tasks'
 
 const App = () => {
@@ -12,7 +13,7 @@ const App = () => {
   const [search, setSearch] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('All')
 
-  // Fetch tasks from Express server
+ 
   const fetchTasks = async () => {
     try {
       const res = await axios.get(API_URL, {
@@ -24,7 +25,6 @@ const App = () => {
     }
   }
 
-  // Fetch tasks due today
   const fetchTodayTasks = async () => {
     try {
       const res = await axios.get(`${API_URL}/today`)
@@ -39,7 +39,6 @@ const App = () => {
     fetchTodayTasks()
   }, [search, priorityFilter])
 
-  // Add a new task
   const handleAddTask = async (newTaskData) => {
     try {
       const res = await axios.post(API_URL, newTaskData)
@@ -50,10 +49,10 @@ const App = () => {
     }
   }
 
-  // Toggle completion state
-  const handleToggleTask = async (id, isCompleted) => {
+ 
+  const handleUpdateTask = async (id, updatedFields) => {
     try {
-      const res = await axios.put(`${API_URL}/${id}`, { isCompleted })
+      const res = await axios.put(`${API_URL}/${id}`, updatedFields)
       setTasks(tasks.map((t) => (t._id === id ? res.data : t)))
       fetchTodayTasks()
     } catch (err) {
@@ -61,7 +60,6 @@ const App = () => {
     }
   }
 
-  // Delete task
   const handleDeleteTask = async (id) => {
     try {
       await axios.delete(`${API_URL}/${id}`)
@@ -73,8 +71,29 @@ const App = () => {
   }
 
   return (
-    <div className="min-h-screen bg-radial-[at_25%_25%] from-white to-blue-500 to-75% py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-slate-950 py-10 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+     
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <LiquidEther
+          colors={[ '#5227FF', '#FF9FFC', '#B497CF' ]}
+          mouseForce={19}
+          cursorSize={95}
+          isViscous={true}
+          viscous={30}
+          iterationsViscous={32}
+          iterationsPoisson={24}
+          resolution={0.5}
+          isBounce={false}
+          autoDemo={true}
+          autoSpeed={0.5}
+          autoIntensity={2.4}
+          takeoverDuration={0.25}
+          autoResumeDelay={3000}
+          autoRampDuration={0.6}
+        />
+      </div>
+
+      <div className="max-w-4xl mx-auto relative z-10">
         <header className="mb-8 text-center">
           <div style={{ width: '100%', height: 250, background:'linear-gradient(135deg, #09090f 0%, #1e1b4b 50%, #0f172a 100%)'}}>
               <ParticleText
@@ -148,7 +167,7 @@ const App = () => {
 
         <TaskList
           tasks={tasks}
-          onToggle={handleToggleTask}
+          onUpdate={handleUpdateTask}
           onDelete={handleDeleteTask}
         />
       </div>
