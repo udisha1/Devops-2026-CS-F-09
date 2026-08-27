@@ -10,6 +10,7 @@ require('dotenv').config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const taskRoutes = require('./routes/taskRoutes');
+const authRoutes = require('./routes/authRoutes');
 const Task = require('./models/Task');
 const cron = require('node-cron');
 
@@ -21,6 +22,7 @@ app.use(cors());
 
 
 app.use('/api/tasks', taskRoutes);
+app.use('/api/auth', authRoutes);
 
 
 app.get('/', (req, res) => {

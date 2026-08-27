@@ -15,7 +15,7 @@ export default function TaskCard({ task, onUpdate, onDelete }) {
   const handleBreakdown = async () => {
     setIsGenerating(true);
     try {
-      const res = await axios.post(`http://localhost:5000/api/tasks/${task._id}/breakdown`);
+      const res = await axios.post(`http://localhost:5001/api/tasks/${task._id}/breakdown`);
       onUpdate(task._id, res.data); // Update the tasks state in App.jsx
     } catch (err) {
       console.error("Error breaking down task:", err);

@@ -13,7 +13,7 @@ export default function TaskForm({ onAddTask }) {
     try {
       
       console.log("Asking AI to parse...");
-      const aiResponse = await axios.post('http://localhost:5000/api/parse-task', {
+      const aiResponse = await axios.post('http://localhost:5001/api/parse-task', {
         text: smartText
       });
       

@@ -2,12 +2,16 @@ const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const auth = require('../middleware/auth');
 
-// Get all tasks (with optional search and priority filter)
+// Apply authentication middleware to all routes in this router
+router.use(auth);
+
+// Get all tasks for the logged-in user (with optional search and priority filter)
 router.get('/', async (req, res) => {
   try {
     const { search, priority } = req.query;
-    let query = {};
+    let query = { user: req.user.id };
 
     if (search) {
       query.title = { $regex: search, $options: 'i' };
@@ -23,7 +27,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get tasks due today
+// Get tasks due today for the logged-in user
 router.get('/today', async (req, res) => {
   try {
     const todayStart = new Date();
@@ -33,6 +37,7 @@ router.get('/today', async (req, res) => {
     todayEnd.setHours(23, 59, 59, 999);
 
     const tasks = await Task.find({
+      user: req.user.id,
       isCompleted: false,
       dueDate: {
         $gte: todayStart,
@@ -45,10 +50,13 @@ router.get('/today', async (req, res) => {
   }
 });
 
-// Create task
+// Create task for the logged-in user
 router.post('/', async (req, res) => {
   try {
-    const newTask = new Task(req.body);
+    const newTask = new Task({
+      ...req.body,
+      user: req.user.id
+    });
     const savedTask = await newTask.save();
     res.status(201).json(savedTask);
   } catch (error) {
@@ -56,29 +64,31 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update task status or content
+// Update task status or content (ensuring ownership)
 router.put('/:id', async (req, res) => {
   try {
+    const task = await Task.findOne({ _id: req.params.id, user: req.user.id });
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found or unauthorized' });
+    }
+
     const updatedTask = await Task.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
     );
-    if (!updatedTask) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
     res.status(200).json(updatedTask);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-// Delete task
+// Delete task (ensuring ownership)
 router.delete('/:id', async (req, res) => {
   try {
-    const deletedTask = await Task.findByIdAndDelete(req.params.id);
+    const deletedTask = await Task.findOneAndDelete({ _id: req.params.id, user: req.user.id });
     if (!deletedTask) {
-      return res.status(404).json({ message: 'Task not found' });
+      return res.status(404).json({ message: 'Task not found or unauthorized' });
     }
     res.status(200).json({ message: 'Task deleted successfully' });
   } catch (error) {
@@ -86,12 +96,12 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// POST /api/tasks/:id/breakdown
+// POST /api/tasks/:id/breakdown (ensuring ownership)
 router.post('/:id/breakdown', async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({ _id: req.params.id, user: req.user.id });
     if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
+      return res.status(404).json({ message: 'Task not found or unauthorized' });
     }
 
     if (!process.env.GEMINI_API_KEY) {
@@ -132,7 +142,6 @@ router.post('/:id/breakdown', async (req, res) => {
       throw new Error("Parsed breakdown is not an array");
     }
 
-    // Format and assign to task
     const formattedSubtasks = parsedSubtasks.slice(0, 5).map(item => ({
       title: item.title || item.name || String(item),
       isCompleted: false
