@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, Timer, BarChart3, LogOut, Palette } from 'lucide-react';
+import { LayoutDashboard, Timer, BarChart3, LogOut, Palette, Brain } from 'lucide-react';
 
 export default function Navbar({ 
   activeTab, 
@@ -18,7 +18,8 @@ export default function Navbar({
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'focus', label: 'Focus Zone', icon: Timer },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 }
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'feynman', label: 'Feynman Partner', icon: Brain }
   ];
 
   useEffect(() => {

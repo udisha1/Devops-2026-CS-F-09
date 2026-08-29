@@ -7,6 +7,7 @@ import LiquidEther from './components/LiquidEther'
 import Preloader from './components/Preloader'
 import AuthPage from './components/AuthPage'
 import Navbar from './components/Navbar'
+import FeynmanPartner from './components/FeynmanPartner'
 import { Timer, BarChart3 } from 'lucide-react'
 
 const THEMES = {
@@ -497,6 +498,10 @@ const App = () => {
                   </p>
                 </div>
               </div>
+            )}
+
+            {activeTab === 'feynman' && (
+              <FeynmanPartner themeConfig={currentTheme} />
             )}
           </div>
         )}
