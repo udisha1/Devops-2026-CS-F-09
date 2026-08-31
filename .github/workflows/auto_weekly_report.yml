@@ -2,9 +2,8 @@ name: Weekly Progress Report Auto-Commit
 
 on:
   schedule:
-    # Runs every Thursday at 11:59 PM IST (which corresponds to 18:29 UTC)
-    # Cron format: min hour day-of-month month day-of-week (4 = Thursday)
-    - cron: '29 18 * * 4'
+    # Runs every Saturday at 11:59 PM IST (18:29 UTC, Day 6 = Saturday)
+    - cron: '29 18 * * 6'
   workflow_dispatch: # Allows manual trigger anytime from the Actions tab
 
 permissions:
@@ -50,4 +49,3 @@ jobs:
             git commit -m "docs: archive Form-3 weekly progress report [skip ci]"
             git push
           fi
-
