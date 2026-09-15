@@ -8,7 +8,8 @@ import Preloader from './components/Preloader'
 import AuthPage from './components/AuthPage'
 import Navbar from './components/Navbar'
 import FeynmanPartner from './components/FeynmanPartner'
-import { Timer, BarChart3 } from 'lucide-react'
+import FocusZone from './components/FocusZone'
+import { BarChart3 } from 'lucide-react'
 
 const THEMES = {
   cyberpunk: {
@@ -478,13 +479,11 @@ const App = () => {
             )}
 
             {activeTab === 'focus' && (
-              <div className="animate-tab-content bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-8 text-center text-slate-300 shadow-xl min-h-[300px] flex flex-col justify-center items-center">
-                <Timer size={48} className={`mb-4 animate-pulse ${currentTheme.highlightText}`} />
-                <h3 className="text-xl font-bold text-white mb-2">Focus Zone</h3>
-                <p className="text-sm text-slate-400 max-w-md">
-                  A dedicated view for your Pomodoro Focus Session and daily time-blocking schedule. Coming soon!
-                </p>
-              </div>
+              <FocusZone
+                tasks={tasks}
+                onUpdateTask={handleUpdateTask}
+                themeConfig={currentTheme}
+              />
             )}
 
             {activeTab === 'analytics' && (
