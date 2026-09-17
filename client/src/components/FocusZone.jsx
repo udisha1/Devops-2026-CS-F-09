@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Play, Pause, RotateCcw, SkipForward, Volume2, VolumeX, 
   Flame, CheckCircle2, Circle, Sparkles, Target, Coffee, 
-  CloudRain, Radio, Plus, Minus, Wind, Waves, AudioWaveform
+  CloudRain, Radio, Plus, Minus, AudioWaveform
 } from 'lucide-react';
 
 const MODES = {
@@ -13,11 +13,8 @@ const MODES = {
 
 const SOUNDS = [
   { id: 'off', label: 'Silence', icon: VolumeX, activeClass: 'bg-slate-800/80 border-slate-600 text-white' },
-  { id: 'white', label: 'White Noise', icon: Wind, activeClass: 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300' },
-  { id: 'pink', label: 'Pink Noise', icon: Waves, activeClass: 'bg-pink-500/20 border-pink-500/40 text-pink-300' },
   { id: 'brown', label: 'Brown Noise', icon: AudioWaveform, activeClass: 'bg-amber-600/20 border-amber-600/40 text-amber-300' },
   { id: 'rain', label: 'Soft Rain', icon: CloudRain, activeClass: 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300' },
-  { id: 'drone', label: '432Hz Drone', icon: Radio, activeClass: 'bg-purple-500/20 border-purple-500/40 text-purple-300' },
 ];
 
 export default function FocusZone({ tasks = [], onUpdateTask, themeConfig }) {
@@ -137,50 +134,7 @@ export default function FocusZone({ tasks = [], onUpdateTask, themeConfig }) {
       const ctx = getAudioContext();
       if (!ctx) return;
 
-      if (soundType === 'white') {
-        // Pure White Noise (flat spectral energy across all bands)
-        const bufferSize = ctx.sampleRate * 3;
-        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          output[i] = (Math.random() * 2 - 1) * 0.15;
-        }
-
-        const whiteNoise = ctx.createBufferSource();
-        whiteNoise.buffer = noiseBuffer;
-        whiteNoise.loop = true;
-
-        whiteNoise.connect(ambientGainRef.current);
-        whiteNoise.start();
-
-        ambientSourceNodesRef.current = [whiteNoise];
-      } else if (soundType === 'pink') {
-        // Paul Kellet's filtered pink noise (1/f equal energy per octave)
-        const bufferSize = ctx.sampleRate * 3;
-        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-        for (let i = 0; i < bufferSize; i++) {
-          const white = Math.random() * 2 - 1;
-          b0 = 0.99886 * b0 + white * 0.0555179;
-          b1 = 0.99332 * b1 + white * 0.0750759;
-          b2 = 0.96900 * b2 + white * 0.1538520;
-          b3 = 0.86650 * b3 + white * 0.3104856;
-          b4 = 0.55000 * b4 + white * 0.5329522;
-          b5 = -0.7616 * b5 - white * 0.0168980;
-          output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.09;
-          b6 = white * 0.115926;
-        }
-
-        const pinkNoise = ctx.createBufferSource();
-        pinkNoise.buffer = noiseBuffer;
-        pinkNoise.loop = true;
-
-        pinkNoise.connect(ambientGainRef.current);
-        pinkNoise.start();
-
-        ambientSourceNodesRef.current = [pinkNoise];
-      } else if (soundType === 'brown') {
+      if (soundType === 'brown') {
         // Brownian / Red noise (1/f^2 integrated white noise with deep waterfall rumble)
         const bufferSize = ctx.sampleRate * 3;
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -233,33 +187,6 @@ export default function FocusZone({ tasks = [], onUpdateTask, themeConfig }) {
         whiteNoise.start();
 
         ambientSourceNodesRef.current = [whiteNoise, filter];
-      } else if (soundType === 'drone') {
-        // Cyberpunk 432Hz Binaural Focus Drone
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const droneFilter = ctx.createBiquadFilter();
-
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(216, ctx.currentTime); // Sub-harmonic
-
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(217.5, ctx.currentTime); // 1.5Hz binaural beat delta
-
-        droneFilter.type = 'lowpass';
-        droneFilter.frequency.setValueAtTime(320, ctx.currentTime);
-
-        const droneGain = ctx.createGain();
-        droneGain.gain.setValueAtTime(0.4, ctx.currentTime);
-
-        osc1.connect(droneFilter);
-        osc2.connect(droneFilter);
-        droneFilter.connect(droneGain);
-        droneGain.connect(ambientGainRef.current);
-
-        osc1.start();
-        osc2.start();
-
-        ambientSourceNodesRef.current = [osc1, osc2, droneFilter, droneGain];
       }
     } catch (e) {
       console.warn('Error initiating ambient sound:', e);
@@ -686,7 +613,7 @@ export default function FocusZone({ tasks = [], onUpdateTask, themeConfig }) {
             </div>
 
             {/* Ambient Mode Selectors */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3.5">
+            <div className="grid grid-cols-3 gap-2 mb-3.5">
               {SOUNDS.map(sound => {
                 const Icon = sound.icon;
                 const isActive = ambientSound === sound.id;
