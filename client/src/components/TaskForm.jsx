@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, Plus } from 'lucide-react';
 
-export default function TaskForm({ onAddTask, themeConfig }) {
+export default function TaskForm({ onAddTask, onOpenManualModal, themeConfig }) {
   const [smartText, setSmartText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -49,10 +49,22 @@ export default function TaskForm({ onAddTask, themeConfig }) {
         onSubmit={handleSmartSubmit} 
         className="p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl shadow-xl backdrop-blur-xl mb-6 relative overflow-hidden transition-all duration-300"
       >
-        <h3 className={`text-[10px] font-extrabold uppercase tracking-wider mb-2.5 flex items-center gap-1.5 ${highlightText}`}>
-          <Sparkles size={14} className={isLoading ? 'animate-pulse' : ''} />
-          <span>AI Task Entry</span>
-        </h3>
+        <div className="flex items-center justify-between mb-2.5">
+          <h3 className={`text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${highlightText}`}>
+            <Sparkles size={14} className={isLoading ? 'animate-pulse' : ''} />
+            <span>AI Task Entry</span>
+          </h3>
+          {onOpenManualModal && (
+            <button
+              type="button"
+              onClick={onOpenManualModal}
+              className="text-xs text-slate-300 hover:text-white px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition flex items-center gap-1 font-medium cursor-pointer"
+            >
+              <Plus size={13} />
+              <span>Manual Task</span>
+            </button>
+          )}
+        </div>
         <div className="flex gap-2">
           <input 
             type="text" 

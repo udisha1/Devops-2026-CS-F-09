@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Play, Pause, RotateCcw, SkipForward, Volume2, VolumeX, 
   Flame, CheckCircle2, Circle, Sparkles, Target, Coffee, 
-  CloudRain, Radio, Plus, Minus, AudioWaveform
+  CloudRain, Radio, Plus, Minus, AudioWaveform, Music
 } from 'lucide-react';
 
 const MODES = {
@@ -13,6 +13,7 @@ const MODES = {
 
 const SOUNDS = [
   { id: 'off', label: 'Silence', icon: VolumeX, activeClass: 'bg-slate-800/80 border-slate-600 text-white' },
+  { id: 'flute', label: 'Zen Flute', icon: Music, activeClass: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' },
   { id: 'brown', label: 'Brown Noise', icon: AudioWaveform, activeClass: 'bg-amber-600/20 border-amber-600/40 text-amber-300' },
   { id: 'rain', label: 'Soft Rain', icon: CloudRain, activeClass: 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300' },
 ];
@@ -37,6 +38,8 @@ export default function FocusZone({ tasks = [], onUpdateTask, themeConfig }) {
   const audioCtxRef = useRef(null);
   const ambientGainRef = useRef(null);
   const ambientSourceNodesRef = useRef([]);
+  const fluteTimerRef = useRef(null);
+  const isFlutePlayingRef = useRef(false);
 
   // Theme values
   const colors = themeConfig?.glowColors || ['#c084fc', '#f472b6', '#38bdf8'];
@@ -114,6 +117,11 @@ export default function FocusZone({ tasks = [], onUpdateTask, themeConfig }) {
 
   // Stop current ambient nodes
   const stopAmbientSound = () => {
+    isFlutePlayingRef.current = false;
+    if (fluteTimerRef.current) {
+      clearTimeout(fluteTimerRef.current);
+      fluteTimerRef.current = null;
+    }
     ambientSourceNodesRef.current.forEach(node => {
       try {
         if (node.stop) node.stop();
@@ -134,7 +142,143 @@ export default function FocusZone({ tasks = [], onUpdateTask, themeConfig }) {
       const ctx = getAudioContext();
       if (!ctx) return;
 
-      if (soundType === 'brown') {
+      if (soundType === 'flute') {
+        // Meditative Zen Bamboo Flute (Pentatonic scale, soft breath air turbulence, gentle vibrato)
+        isFlutePlayingRef.current = true;
+
+        // Acoustic space bus: subtle delay echo and warm lowpass filter
+        const fluteBus = ctx.createGain();
+        fluteBus.gain.setValueAtTime(0.7, ctx.currentTime);
+
+        const fluteFilter = ctx.createBiquadFilter();
+        fluteFilter.type = 'lowpass';
+        fluteFilter.frequency.setValueAtTime(2200, ctx.currentTime);
+
+        const delay = ctx.createDelay();
+        delay.delayTime.setValueAtTime(0.38, ctx.currentTime);
+
+        const feedback = ctx.createGain();
+        feedback.gain.setValueAtTime(0.25, ctx.currentTime);
+
+        fluteBus.connect(fluteFilter);
+        fluteFilter.connect(ambientGainRef.current);
+
+        fluteFilter.connect(delay);
+        delay.connect(feedback);
+        feedback.connect(delay);
+        delay.connect(ambientGainRef.current);
+
+        ambientSourceNodesRef.current.push(fluteBus, fluteFilter, delay, feedback);
+
+        // Breath noise buffer (air turbulence inside wooden flute)
+        const noiseLength = ctx.sampleRate * 2;
+        const breathBuffer = ctx.createBuffer(1, noiseLength, ctx.sampleRate);
+        const breathData = breathBuffer.getChannelData(0);
+        for (let i = 0; i < noiseLength; i++) {
+          breathData[i] = (Math.random() * 2 - 1) * 0.035;
+        }
+
+        // Japanese Shakuhachi / Insen pentatonic scale (D4, F4, G4, A4, C5, D5)
+        const scale = [293.66, 349.23, 392.00, 440.00, 523.25, 587.33];
+        let noteIndex = 0;
+
+        const playFluteNote = () => {
+          if (!isFlutePlayingRef.current) return;
+
+          try {
+            const freq = scale[noteIndex % scale.length];
+            const step = Math.random() > 0.4 ? 1 : (Math.random() > 0.5 ? -1 : 2);
+            noteIndex = Math.abs((noteIndex + step) % scale.length);
+
+            const noteDuration = 3.6 + Math.random() * 1.4;
+            const now = ctx.currentTime;
+
+            // 1. Core sine oscillator (fundamental tone)
+            const osc = ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now);
+
+            // 2. Overtone harmonic (2nd harmonic for warm wooden texture)
+            const harmonic = ctx.createOscillator();
+            harmonic.type = 'sine';
+            harmonic.frequency.setValueAtTime(freq * 2, now);
+            const harmonicGain = ctx.createGain();
+            harmonicGain.gain.setValueAtTime(0.12, now);
+
+            // 3. Gentle human vibrato LFO (swells in after 0.5s)
+            const vibrato = ctx.createOscillator();
+            vibrato.type = 'sine';
+            vibrato.frequency.setValueAtTime(4.6, now);
+            const vibratoGain = ctx.createGain();
+            vibratoGain.gain.setValueAtTime(0, now);
+            vibratoGain.gain.setValueAtTime(0, now + 0.5);
+            vibratoGain.gain.linearRampToValueAtTime(3.6, now + 1.4);
+
+            vibrato.connect(vibratoGain);
+            vibratoGain.connect(osc.frequency);
+            vibratoGain.connect(harmonic.frequency);
+
+            // 4. Breath noise (soft airy embouchure turbulence)
+            const breath = ctx.createBufferSource();
+            breath.buffer = breathBuffer;
+            breath.loop = true;
+            const breathFilter = ctx.createBiquadFilter();
+            breathFilter.type = 'bandpass';
+            breathFilter.frequency.setValueAtTime(1400, now);
+            breathFilter.Q.setValueAtTime(2.5, now);
+            const breathGain = ctx.createGain();
+            breathGain.gain.setValueAtTime(0, now);
+
+            // 5. Note amplitude envelope (soft swelling attack & gentle fade release)
+            const noteGain = ctx.createGain();
+            const attack = 0.75;
+            const release = 1.3;
+            const peak = 0.17;
+
+            noteGain.gain.setValueAtTime(0.0001, now);
+            noteGain.gain.linearRampToValueAtTime(peak, now + attack);
+            noteGain.gain.setValueAtTime(peak * 0.9, now + noteDuration - release);
+            noteGain.gain.exponentialRampToValueAtTime(0.0001, now + noteDuration);
+
+            breathGain.gain.setValueAtTime(0.0001, now);
+            breathGain.gain.linearRampToValueAtTime(0.025, now + attack);
+            breathGain.gain.exponentialRampToValueAtTime(0.0001, now + noteDuration);
+
+            // Routing
+            osc.connect(noteGain);
+            harmonic.connect(harmonicGain);
+            harmonicGain.connect(noteGain);
+
+            breath.connect(breathFilter);
+            breathFilter.connect(breathGain);
+            breathGain.connect(noteGain);
+
+            noteGain.connect(fluteBus);
+
+            // Trigger audio
+            vibrato.start(now);
+            osc.start(now);
+            harmonic.start(now);
+            breath.start(now);
+
+            const stopTime = now + noteDuration + 0.1;
+            vibrato.stop(stopTime);
+            osc.stop(stopTime);
+            harmonic.stop(stopTime);
+            breath.stop(stopTime);
+
+            ambientSourceNodesRef.current.push(osc, harmonic, vibrato, breath, noteGain);
+
+            // Seamlessly schedule the next meditative note
+            const nextNoteDelay = (noteDuration - 0.6 + Math.random() * 0.4) * 1000;
+            fluteTimerRef.current = setTimeout(playFluteNote, nextNoteDelay);
+          } catch (e) {
+            console.warn('Error in flute note loop:', e);
+          }
+        };
+
+        playFluteNote();
+      } else if (soundType === 'brown') {
         // Brownian / Red noise (1/f^2 integrated white noise with deep waterfall rumble)
         const bufferSize = ctx.sampleRate * 3;
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -613,7 +757,7 @@ export default function FocusZone({ tasks = [], onUpdateTask, themeConfig }) {
             </div>
 
             {/* Ambient Mode Selectors */}
-            <div className="grid grid-cols-3 gap-2 mb-3.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3.5">
               {SOUNDS.map(sound => {
                 const Icon = sound.icon;
                 const isActive = ambientSound === sound.id;

@@ -1,10 +1,12 @@
+require('dotenv').config();
 const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+if (process.env.MONGO_URI && process.env.MONGO_URI.includes('mongodb+srv')) {
+  dns.setServers(['8.8.8.8', '8.8.4.4']);
+}
 
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
 
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");

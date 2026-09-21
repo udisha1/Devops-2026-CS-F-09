@@ -9,6 +9,7 @@ import AuthPage from './components/AuthPage'
 import Navbar from './components/Navbar'
 import FeynmanPartner from './components/FeynmanPartner'
 import FocusZone from './components/FocusZone'
+import TaskModal from './components/TaskModal'
 import { BarChart3 } from 'lucide-react'
 
 const THEMES = {
@@ -71,6 +72,7 @@ const App = () => {
     return localStorage.getItem('taskflow-theme') || 'cyberpunk'
   })
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [taskModalState, setTaskModalState] = useState({ isOpen: false, task: null })
 
   const currentTheme = THEMES[theme] || THEMES.cyberpunk
 
@@ -420,7 +422,11 @@ const App = () => {
                   </div>
                 )}
 
-                <TaskForm onAddTask={handleAddTask} themeConfig={currentTheme} />
+                <TaskForm
+                  onAddTask={handleAddTask}
+                  onOpenManualModal={() => setTaskModalState({ isOpen: true, task: null })}
+                  themeConfig={currentTheme}
+                />
 
                 {/* Filter Controls */}
                 <div className="flex flex-col md:flex-row gap-4 mb-6 w-full">
@@ -473,6 +479,7 @@ const App = () => {
                   tasks={filteredAndSortedTasks}
                   onUpdate={handleUpdateTask}
                   onDelete={handleDeleteTask}
+                  onEdit={(task) => setTaskModalState({ isOpen: true, task })}
                   themeConfig={currentTheme}
                 />
               </div>
@@ -504,6 +511,21 @@ const App = () => {
             )}
           </div>
         )}
+
+        {/* Task Detail & Manual Add Modal */}
+        <TaskModal
+          isOpen={taskModalState.isOpen}
+          task={taskModalState.task}
+          onClose={() => setTaskModalState({ isOpen: false, task: null })}
+          onSave={async (formData) => {
+            if (taskModalState.task?._id) {
+              await handleUpdateTask(taskModalState.task._id, formData);
+            } else {
+              await handleAddTask(formData);
+            }
+          }}
+          themeConfig={currentTheme}
+        />
       </div>
     </>
   )

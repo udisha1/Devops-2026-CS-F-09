@@ -1,7 +1,7 @@
 import React from 'react';
 import TaskCard from './TaskCard';
 
-export default function TaskList({ tasks, onUpdate, onDelete, themeConfig }) {
+export default function TaskList({ tasks, onUpdate, onDelete, onEdit, themeConfig }) {
   if (tasks.length === 0) {
     return (
       <div className="text-center py-12 bg-white/5 rounded-xl border border-dashed border-slate-800">
@@ -18,6 +18,7 @@ export default function TaskList({ tasks, onUpdate, onDelete, themeConfig }) {
           task={task}
           onUpdate={onUpdate}
           onDelete={onDelete}
+          onEdit={onEdit}
           themeConfig={themeConfig}
         />
       ))}
