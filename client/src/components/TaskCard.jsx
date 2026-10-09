@@ -83,7 +83,7 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit, themeConfig
 
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h3 className={`font-semibold text-white break-words ${task.isCompleted ? 'line-through text-gray-500' : ''}`}>
+              <h3 className={`text-base font-bold text-white break-words tracking-tight ${task.isCompleted ? 'line-through text-slate-500' : ''}`}>
                 {task.title}
               </h3>
               {!task.isCompleted && (!task.subtasks || task.subtasks.length === 0) && (
@@ -91,7 +91,7 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit, themeConfig
                   <button
                     onClick={handleBreakdown}
                     disabled={isGenerating}
-                    className="text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/30 transition flex items-center gap-1 text-xs font-semibold disabled:opacity-50 cursor-pointer"
+                    className="text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 px-2.5 py-1 rounded-lg border border-purple-500/30 transition flex items-center gap-1 text-xs font-semibold disabled:opacity-50 cursor-pointer"
                     title="Break task into subtasks using AI"
                   >
                     <Sparkles size={13} className={isGenerating ? 'animate-spin' : ''} />
@@ -99,7 +99,7 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit, themeConfig
                   </button>
                   <button
                     onClick={() => setShowQuickAdd(!showQuickAdd)}
-                    className="text-slate-400 hover:text-slate-200 hover:bg-white/5 px-2 py-0.5 rounded-md border border-white/10 transition flex items-center gap-1 text-xs font-medium cursor-pointer"
+                    className="text-slate-400 hover:text-slate-200 hover:bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 transition flex items-center gap-1 text-xs font-medium cursor-pointer"
                     title="Add subtask manually"
                   >
                     <Plus size={12} />
@@ -109,7 +109,7 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit, themeConfig
               )}
             </div>
             {task.description && (
-              <p className="text-sm text-gray-300 mt-1 break-words">{task.description}</p>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed break-words">{task.description}</p>
             )}
 
             {/* Subtasks List & Quick Add */}
@@ -118,14 +118,14 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit, themeConfig
                 {task.subtasks && task.subtasks.length > 0 && (
                   <>
                     <div className="flex justify-between items-center mb-1.5">
-                      <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         Subtasks ({completedSubtasks}/{totalSubtasks})
                       </h4>
-                      <span className="text-[10px] font-extrabold text-gray-350">{progressPercent}%</span>
+                      <span className="text-[10px] font-extrabold text-slate-300">{progressPercent}%</span>
                     </div>
 
                     {/* Progress Bar Container */}
-                    <div className="w-full bg-white/10 rounded-full h-1.5 mb-3 overflow-hidden">
+                    <div className="w-full bg-slate-950/80 rounded-full h-1.5 mb-3 overflow-hidden border border-white/5">
                       <div
                         className="h-full transition-all duration-300 ease-out rounded-full"
                         style={{
@@ -135,21 +135,24 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit, themeConfig
                       />
                     </div>
 
-                    <div className="space-y-2 mb-3">
+                    <div className="space-y-1 mb-3">
                       {task.subtasks.map((sub) => (
-                        <div key={sub._id || sub.title} className="flex items-center gap-2 text-sm">
+                        <div 
+                          key={sub._id || sub.title} 
+                          className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-white/5 transition text-xs"
+                        >
                           <button
                             onClick={() => handleToggleSubtask(sub._id, !sub.isCompleted)}
                             disabled={task.isCompleted}
                             className="text-slate-500 hover:text-indigo-400 transition flex-shrink-0 cursor-pointer active:scale-90 hover:scale-105 duration-200 transform"
                           >
                             {sub.isCompleted ? (
-                              <CheckCircle2 className="text-emerald-400 animate-check-pop" size={16} />
+                              <CheckCircle2 className="text-emerald-400 animate-check-pop" size={15} />
                             ) : (
-                              <Circle size={16} className="transition-transform duration-200 hover:scale-105" />
+                              <Circle size={15} className="transition-transform duration-200 hover:scale-105" />
                             )}
                           </button>
-                          <span className={`break-words ${sub.isCompleted ? 'line-through text-gray-500' : 'text-gray-200'}`}>
+                          <span className={`break-words font-medium ${sub.isCompleted ? 'line-through text-slate-500' : 'text-slate-200'}`}>
                             {sub.title}
                           </span>
                         </div>
@@ -165,12 +168,12 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit, themeConfig
                     value={quickSubtask}
                     onChange={(e) => setQuickSubtask(e.target.value)}
                     placeholder="+ Quick subtask..."
-                    className="flex-1 px-2.5 py-1 text-xs bg-black/30 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition"
+                    className="flex-1 px-3 py-1.5 text-xs bg-slate-950/80 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
                   />
                   <button
                     type="submit"
                     disabled={!quickSubtask.trim()}
-                    className="px-2.5 py-1 text-xs font-semibold bg-white/10 hover:bg-white/20 disabled:opacity-40 text-gray-200 rounded-lg transition cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-semibold bg-white/10 hover:bg-white/20 disabled:opacity-40 text-gray-200 rounded-lg transition cursor-pointer"
                   >
                     Add
                   </button>
@@ -178,15 +181,15 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit, themeConfig
               </div>
             )}
 
-            <div className="flex flex-wrap gap-2 items-center mt-3">
-              <span className="text-xs px-2.5 py-1 bg-white/10 text-white rounded-full font-medium border border-white/5">
+            <div className="flex flex-wrap gap-2 items-center mt-3.5">
+              <span className="text-[11px] px-2.5 py-1 bg-white/5 text-slate-300 rounded-lg font-medium border border-white/5">
                 {task.category || 'General'}
               </span>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${priorityColors[task.priority]}`}>
+              <span className={`text-[11px] px-2.5 py-1 rounded-lg font-bold ${priorityColors[task.priority]}`}>
                 {task.priority}
               </span>
               {task.dueDate && (
-                <span className="text-xs px-2.5 py-1 bg-indigo-500/20 text-indigo-300 rounded-full font-medium flex items-center gap-1 border border-indigo-500/30">
+                <span className="text-[11px] px-2.5 py-1 bg-indigo-500/10 text-indigo-300 rounded-lg font-semibold flex items-center gap-1.5 border border-indigo-500/20">
                   <Calendar size={12} />
                   Due: {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                 </span>
@@ -199,18 +202,18 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit, themeConfig
           {onEdit && (
             <button
               onClick={() => onEdit(task)}
-              className="text-gray-400 hover:text-indigo-400 transition p-1 rounded-lg hover:bg-white/5 cursor-pointer"
+              className="text-slate-400 hover:text-indigo-400 transition p-1.5 rounded-lg hover:bg-white/5 cursor-pointer"
               title="Edit Task Details"
             >
-              <Pencil size={17} />
+              <Pencil size={15} />
             </button>
           )}
           <button
             onClick={() => onDelete(task._id)}
-            className="text-gray-400 hover:text-rose-400 transition p-1 rounded-lg hover:bg-white/5 cursor-pointer"
+            className="text-slate-400 hover:text-rose-400 transition p-1.5 rounded-lg hover:bg-white/5 cursor-pointer"
             title="Delete Task"
           >
-            <Trash2 size={17} />
+            <Trash2 size={15} />
           </button>
         </div>
       </div>

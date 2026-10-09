@@ -44,40 +44,49 @@ export default function TaskForm({ onAddTask, onOpenManualModal, themeConfig }) 
   const highlightText = themeConfig?.highlightText || 'text-indigo-400';
 
   return (
-    <div className="mb-8">
+    <div className="mb-6">
       <form 
         onSubmit={handleSmartSubmit} 
-        className="p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl shadow-xl backdrop-blur-xl mb-6 relative overflow-hidden transition-all duration-300"
+        className="p-4 sm:p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl shadow-xl backdrop-blur-xl relative overflow-hidden transition-all duration-300"
       >
-        <div className="flex items-center justify-between mb-2.5">
-          <h3 className={`text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${highlightText}`}>
-            <Sparkles size={14} className={isLoading ? 'animate-pulse' : ''} />
-            <span>AI Task Entry</span>
-          </h3>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className={`text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${highlightText}`}>
+              <Sparkles size={14} className={isLoading ? 'animate-pulse' : ''} />
+              <span>AI Natural Language Entry</span>
+            </span>
+            <span className="text-[11px] text-slate-500 hidden sm:inline">
+              · parses dates, tags & priorities automatically
+            </span>
+          </div>
+
           {onOpenManualModal && (
             <button
               type="button"
               onClick={onOpenManualModal}
-              className="text-xs text-slate-300 hover:text-white px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition flex items-center gap-1 font-medium cursor-pointer"
+              className="text-xs text-slate-300 hover:text-white px-3 py-1 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition flex items-center gap-1.5 font-semibold cursor-pointer active:scale-95"
             >
               <Plus size={13} />
               <span>Manual Task</span>
             </button>
           )}
         </div>
-        <div className="flex gap-2">
-          <input 
-            type="text" 
-            value={smartText}
-            onChange={(e) => setSmartText(e.target.value)}
-            placeholder="Type anything (e.g. 'Write report by Friday high priority')..."
-            className="flex-1 px-4 py-2.5 bg-slate-950/80 border border-slate-850 text-slate-100 placeholder-slate-500 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-700 focus:border-slate-700 transition-all text-sm font-medium"
-            disabled={isLoading}
-          />
+
+        <div className="flex flex-col sm:flex-row gap-2.5">
+          <div className="relative flex-1">
+            <input 
+              type="text" 
+              value={smartText}
+              onChange={(e) => setSmartText(e.target.value)}
+              placeholder="E.g. 'Submit project presentation by tomorrow 5pm high priority'..."
+              className="w-full px-4 py-2.5 bg-slate-950/80 border border-slate-800 text-slate-100 placeholder-slate-500 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all text-xs sm:text-sm font-medium"
+              disabled={isLoading}
+            />
+          </div>
           <button 
             type="submit" 
             disabled={isLoading || !smartText.trim()}
-            className="px-5 py-2.5 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl disabled:opacity-50 transition active:scale-[0.96] flex items-center justify-center gap-1.5 cursor-pointer shadow-lg"
+            className="px-5 py-2.5 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl disabled:opacity-40 transition active:scale-[0.96] flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shrink-0"
             style={{
               background: `linear-gradient(135deg, ${colors[0]}, ${colors[1] || colors[0]})`
             }}
@@ -85,10 +94,13 @@ export default function TaskForm({ onAddTask, onOpenManualModal, themeConfig }) 
             {isLoading ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                <span>Thinking...</span>
+                <span>Parsing...</span>
               </>
             ) : (
-              <span>Magic Add</span>
+              <>
+                <Sparkles size={14} />
+                <span>Magic Add</span>
+              </>
             )}
           </button>
         </div>

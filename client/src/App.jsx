@@ -10,7 +10,8 @@ import Navbar from './components/Navbar'
 import FeynmanPartner from './components/FeynmanPartner'
 import FocusZone from './components/FocusZone'
 import TaskModal from './components/TaskModal'
-import { BarChart3 } from 'lucide-react'
+import EisenhowerMatrix from './components/EisenhowerMatrix'
+import { BarChart3, Search, Filter, ArrowUpDown } from 'lucide-react'
 
 const THEMES = {
   cyberpunk: {
@@ -273,7 +274,7 @@ const App = () => {
    
       {appLoading && <Preloader onComplete={() => setAppLoading(false)} />}
 
-      <div className={`min-h-screen ${currentTheme.bgClass} py-10 px-4 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-500`}>
+      <div className={`min-h-screen ${currentTheme.bgClass} relative overflow-hidden transition-colors duration-500`}>
 
         <div className="fixed inset-0 z-0 pointer-events-none">
           <LiquidEther
@@ -300,7 +301,7 @@ const App = () => {
           <AuthPage onLoginSuccess={handleLoginSuccess} />
         ) : (
         
-          <div className="max-w-4xl mx-auto relative z-10">
+          <div className="flex flex-col md:flex-row min-h-screen max-w-[1440px] mx-auto relative z-10 gap-6 px-3 sm:px-6 py-4 md:py-6">
             
             <Navbar
               activeTab={activeTab}
@@ -311,7 +312,10 @@ const App = () => {
               theme={theme}
               setTheme={setTheme}
               THEMES={THEMES}
+              tasks={tasks}
             />
+
+            <main className="flex-1 min-w-0 pb-12">
 
             <style>{`
               @keyframes aura-drift {
@@ -353,70 +357,71 @@ const App = () => {
               }
             `}</style>
 
-            <header className="relative flex flex-col items-center justify-center pt-8 pb-12 overflow-visible text-center z-10">
-              {/* Dynamic Aura Glow Dots */}
-              <div 
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full opacity-20 filter blur-[110px] pointer-events-none z-0"
-                style={{
-                  backgroundColor: currentTheme.glowColors[0],
-                  animation: 'aura-drift 12s ease-in-out infinite'
-                }}
-              />
-              <div 
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full opacity-15 filter blur-[110px] pointer-events-none z-0"
-                style={{
-                  backgroundColor: currentTheme.glowColors[1] || currentTheme.glowColors[0],
-                  animation: 'aura-drift-reverse 15s ease-in-out infinite'
-                }}
-              />
-              
-              {/* Brand Text */}
-              <div className="relative z-10 flex flex-col items-center select-none">
-                <span className={`text-[10px] font-extrabold uppercase tracking-[0.4em] mb-3 px-3 py-1 bg-slate-900/80 border ${currentTheme.highlightBorder} rounded-full ${currentTheme.highlightText} backdrop-blur-xl shadow-lg`}>
-                  ✨ Flowing Workspace
-                </span>
-                <h1 className="text-5xl md:text-6xl font-black uppercase tracking-[0.25em] text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-400 drop-shadow-[0_2px_10px_rgba(255,255,255,0.05)]">
-                  TaskFlow
-                </h1>
-                <p className="text-xs text-slate-400 font-semibold tracking-wider mt-3.5 max-w-sm">
-                  Flow through your day, one task at a time.
-                </p>
-              </div>
-
-              {/* Sleek dynamic divider line */}
-              <div 
-                className="w-48 h-[1px] mt-8 opacity-45 rounded-full"
-                style={{
-                  background: `linear-gradient(90deg, transparent, ${currentTheme.glowColors[0]}, ${currentTheme.glowColors[1] || currentTheme.glowColors[0]}, transparent)`
-                }}
-              />
-            </header>
-
             {/* Tab content switching */}
             {activeTab === 'dashboard' && (
               <div className="animate-tab-content">
+                {/* Sleek Compact Hero Greeting Bar */}
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl backdrop-blur-xl shadow-xl">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-slate-950 border border-white/10 ${currentTheme.highlightText}`}>
+                        ⚡ Active Flow
+                      </span>
+                      <span className="text-xs text-slate-400 font-semibold">
+                        {tasks.filter(t => !t.isCompleted).length} pending · {tasks.filter(t => t.isCompleted).length} completed
+                      </span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider">
+                      Welcome, {user?.name?.split(' ')[0] || 'User'}
+                    </h2>
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">
+                      Capture tasks naturally with AI or prioritize them in the Eisenhower Matrix.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 self-start sm:self-auto">
+                    <button
+                      onClick={() => setActiveTab('matrix')}
+                      className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-200 hover:text-white transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>Priority Matrix</span>
+                      <span className="text-[10px] text-slate-400">→</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('focus')}
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold text-white transition cursor-pointer shadow-lg flex items-center gap-1.5"
+                      style={{
+                        background: `linear-gradient(135deg, ${currentTheme.glowColors[0]}, ${currentTheme.glowColors[1] || currentTheme.glowColors[0]})`
+                      }}
+                    >
+                      <span>Focus Zone</span>
+                      <span className="text-[10px]">⏱</span>
+                    </button>
+                  </div>
+                </div>
+
                 {todayTasks.length > 0 && (
-                  <div className="mb-6 p-5 bg-gradient-to-r from-amber-50/10 to-orange-50/10 border border-amber-500/20 backdrop-blur-xl rounded-2xl shadow-sm relative overflow-hidden">
+                  <div className="mb-6 p-4 sm:p-5 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-transparent border border-amber-500/20 backdrop-blur-xl rounded-2xl shadow-sm relative overflow-hidden">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h2 className="text-lg font-bold text-amber-400 flex items-center gap-2">
-                          🌅 Good Morning!
-                        </h2>
-                        <p className="text-sm text-slate-350 mt-1 font-medium">
-                          You have <strong>{todayTasks.length}</strong>{' '}
-                          {todayTasks.length === 1 ? 'task' : 'tasks'} due today:
-                        </p>
-                        <ul className="mt-3 space-y-1.5 text-sm text-slate-300">
+                        <h3 className="text-sm font-bold text-amber-400 flex items-center gap-2">
+                          <span>🌅 Good Morning!</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                            {todayTasks.length} {todayTasks.length === 1 ? 'task' : 'tasks'} due today
+                          </span>
+                        </h3>
+                        <div className="mt-2.5 flex flex-wrap gap-2">
                           {todayTasks.map((t) => (
-                            <li key={t._id} className="flex items-center gap-2 font-semibold">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                              {t.title}{' '}
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-305 font-bold border border-amber-500/30">
-                                {t.priority}
-                              </span>
-                            </li>
+                            <span 
+                              key={t._id} 
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/70 border border-amber-500/20 text-xs font-semibold text-slate-200"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                              <span className="truncate max-w-[200px]">{t.title}</span>
+                              <span className="text-[10px] text-amber-300">({t.priority})</span>
+                            </span>
                           ))}
-                        </ul>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -428,51 +433,72 @@ const App = () => {
                   themeConfig={currentTheme}
                 />
 
-                {/* Filter Controls */}
-                <div className="flex flex-col md:flex-row gap-4 mb-6 w-full">
-                  <input
-                    type="text"
-                    placeholder="Search tasks..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="flex-1 px-4 py-2 border border-slate-800 rounded-xl bg-slate-950/80 text-white placeholder-slate-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                  />
-                  
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="px-4 py-2 border border-slate-800 rounded-xl bg-slate-950/80 text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none cursor-pointer"
-                  >
-                    <option value="All" className="bg-slate-950">All Categories</option>
-                    <option value="Work" className="bg-slate-950">💼 Work</option>
-                    <option value="Personal" className="bg-slate-950">🏠 Personal</option>
-                    <option value="Study" className="bg-slate-950">🎓 Study</option>
-                    <option value="General" className="bg-slate-950">📌 General</option>
-                  </select>
+                {/* Unified Filter & Search Toolbar */}
+                <div className="p-3 bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl shadow-xl mb-6 flex flex-col md:flex-row items-stretch md:items-center gap-3">
+                  <div className="relative flex-1">
+                    <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="Search tasks by title..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-slate-950/80 border border-slate-800 text-slate-100 placeholder-slate-500 rounded-xl focus:outline-none focus:border-indigo-500 transition text-xs font-medium"
+                    />
+                  </div>
 
-                  <select
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="px-4 py-2 border border-slate-800 rounded-xl bg-slate-950/80 text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none cursor-pointer"
-                  >
-                    <option value="All" className="bg-slate-950">All Priorities</option>
-                    <option value="Low" className="bg-slate-950">Low Priority</option>
-                    <option value="Medium" className="bg-slate-950">Medium Priority</option>
-                    <option value="High" className="bg-slate-950">High Priority</option>
-                  </select>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Category Selector */}
+                    <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2">
+                      <Filter size={13} className="text-slate-500" />
+                      <select
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        className="bg-transparent text-xs font-semibold text-slate-300 focus:outline-none cursor-pointer border-none p-0 pr-1"
+                      >
+                        <option value="All" className="bg-slate-950">All Categories</option>
+                        <option value="Work" className="bg-slate-950">💼 Work</option>
+                        <option value="Personal" className="bg-slate-950">🏠 Personal</option>
+                        <option value="Study" className="bg-slate-950">🎓 Study</option>
+                        <option value="General" className="bg-slate-950">📌 General</option>
+                      </select>
+                    </div>
 
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="px-4 py-2 border border-slate-800 rounded-xl bg-slate-950/80 text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none cursor-pointer"
-                  >
-                    <option value="createdAt-desc" className="bg-slate-950">Newest Created</option>
-                    <option value="createdAt-asc" className="bg-slate-950">Oldest Created</option>
-                    <option value="dueDate-asc" className="bg-slate-950">📅 Due Date (Asc)</option>
-                    <option value="dueDate-desc" className="bg-slate-950">📅 Due Date (Desc)</option>
-                    <option value="priority-desc" className="bg-slate-950">🔥 Priority (High-Low)</option>
-                    <option value="priority-asc" className="bg-slate-950">❄️ Priority (Low-High)</option>
-                  </select>
+                    {/* Priority Selector */}
+                    <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2">
+                      <select
+                        value={priorityFilter}
+                        onChange={(e) => setPriorityFilter(e.target.value)}
+                        className="bg-transparent text-xs font-semibold text-slate-300 focus:outline-none cursor-pointer border-none p-0 pr-1"
+                      >
+                        <option value="All" className="bg-slate-950">All Priorities</option>
+                        <option value="Low" className="bg-slate-950">🟢 Low</option>
+                        <option value="Medium" className="bg-slate-950">🟡 Medium</option>
+                        <option value="High" className="bg-slate-950">🔴 High</option>
+                      </select>
+                    </div>
+
+                    {/* Sort Selector */}
+                    <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2">
+                      <ArrowUpDown size={13} className="text-slate-500" />
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="bg-transparent text-xs font-semibold text-slate-300 focus:outline-none cursor-pointer border-none p-0 pr-1"
+                      >
+                        <option value="createdAt-desc" className="bg-slate-950">Newest Created</option>
+                        <option value="createdAt-asc" className="bg-slate-950">Oldest Created</option>
+                        <option value="dueDate-asc" className="bg-slate-950">📅 Due Date (Asc)</option>
+                        <option value="dueDate-desc" className="bg-slate-950">📅 Due Date (Desc)</option>
+                        <option value="priority-desc" className="bg-slate-950">🔥 Priority (High-Low)</option>
+                        <option value="priority-asc" className="bg-slate-950">❄️ Priority (Low-High)</option>
+                      </select>
+                    </div>
+
+                    {/* Task Count Badge */}
+                    <span className="text-[11px] font-bold text-slate-400 px-2.5 py-1 rounded-lg bg-white/5 hidden xl:inline">
+                      {filteredAndSortedTasks.length} {filteredAndSortedTasks.length === 1 ? 'task' : 'tasks'}
+                    </span>
+                  </div>
                 </div>
 
                 <TaskList
@@ -483,6 +509,17 @@ const App = () => {
                   themeConfig={currentTheme}
                 />
               </div>
+            )}
+
+            {activeTab === 'matrix' && (
+              <EisenhowerMatrix
+                tasks={tasks}
+                onUpdateTask={handleUpdateTask}
+                onDeleteTask={handleDeleteTask}
+                onAddTask={handleAddTask}
+                onEditTask={(task) => setTaskModalState({ isOpen: true, task })}
+                themeConfig={currentTheme}
+              />
             )}
 
             {activeTab === 'focus' && (
@@ -509,6 +546,7 @@ const App = () => {
             {activeTab === 'feynman' && (
               <FeynmanPartner themeConfig={currentTheme} />
             )}
+            </main>
           </div>
         )}
 

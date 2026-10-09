@@ -37,7 +37,12 @@ const TaskSchema = new mongoose.Schema(
         title: { type: String, required: true },
         isCompleted: { type: Boolean, default: false }
       }
-    ]
+    ],
+    eisenhowerQuadrant: {
+      type: String,
+      enum: ['q1', 'q2', 'q3', 'q4', 'auto'],
+      default: 'auto'
+    }
   },
   { timestamps: true }
 );

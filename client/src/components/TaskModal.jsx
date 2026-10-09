@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Plus, Trash2, CheckCircle2, Circle, Sparkles, Tag, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Calendar, Plus, Trash2, CheckCircle2, Circle, Sparkles, Tag, AlertCircle, Loader2, LayoutGrid } from 'lucide-react';
 
 const CATEGORIES = ['General', 'Work', 'Personal', 'Study'];
 const PRIORITIES = [
@@ -18,6 +18,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task = null, themeC
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [priority, setPriority] = useState('Medium');
   const [dueDate, setDueDate] = useState('');
+  const [eisenhowerQuadrant, setEisenhowerQuadrant] = useState('auto');
   const [subtasks, setSubtasks] = useState([]);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,6 +58,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task = null, themeC
         }
         setPriority(task.priority || 'Medium');
         setDueDate(formatDateTimeLocal(task.dueDate));
+        setEisenhowerQuadrant(task.eisenhowerQuadrant || 'auto');
         setSubtasks(task.subtasks ? [...task.subtasks] : []);
       } else {
         // Reset for new task
@@ -67,6 +69,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task = null, themeC
         setIsCustomCategory(false);
         setPriority('Medium');
         setDueDate('');
+        setEisenhowerQuadrant('auto');
         setSubtasks([]);
       }
       setNewSubtaskTitle('');
@@ -141,6 +144,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task = null, themeC
       category: finalCategory,
       priority,
       dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+      eisenhowerQuadrant,
       subtasks: cleanedSubtasks
     };
 
@@ -317,6 +321,25 @@ export default function TaskModal({ isOpen, onClose, onSave, task = null, themeC
                 </button>
               )}
             </div>
+          </div>
+
+          {/* Eisenhower Matrix Placement */}
+          <div>
+            <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
+              <LayoutGrid size={12} />
+              <span>Eisenhower Matrix Placement</span>
+            </label>
+            <select
+              value={eisenhowerQuadrant}
+              onChange={(e) => setEisenhowerQuadrant(e.target.value)}
+              className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-slate-800 text-xs font-semibold text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-700 cursor-pointer"
+            >
+              <option value="auto">⚡ Auto-Categorize (Smart Priority & Due Date)</option>
+              <option value="q1">🔥 Q1: Do First (Urgent & Important)</option>
+              <option value="q2">⏳ Q2: Schedule (Not Urgent, Important)</option>
+              <option value="q3">👥 Q3: Delegate (Urgent, Not Important)</option>
+              <option value="q4">📦 Q4: Don't Do / Backlog (Neither)</option>
+            </select>
           </div>
 
           {/* Subtasks Checklist Manager */}
