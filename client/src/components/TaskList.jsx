@@ -1,8 +1,44 @@
 import React from 'react';
 import TaskCard from './TaskCard';
+import KanbanBoard from './KanbanBoard';
+import TaskTableView from './TaskTableView';
 import { Sparkles } from 'lucide-react';
 
-export default function TaskList({ tasks, onUpdate, onDelete, onEdit, themeConfig }) {
+export default function TaskList({
+  tasks,
+  onUpdate,
+  onDelete,
+  onEdit,
+  onAddTask,
+  themeConfig,
+  viewMode = 'grid'
+}) {
+  if (viewMode === 'kanban') {
+    return (
+      <KanbanBoard
+        tasks={tasks}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+        onEdit={onEdit}
+        onAddTask={onAddTask}
+        themeConfig={themeConfig}
+      />
+    );
+  }
+
+  if (viewMode === 'list') {
+    return (
+      <TaskTableView
+        tasks={tasks}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+        onEdit={onEdit}
+        themeConfig={themeConfig}
+      />
+    );
+  }
+
+  // Default: Grid View
   if (tasks.length === 0) {
     return (
       <div className="text-center py-16 px-4 bg-slate-900/40 rounded-2xl border border-dashed border-slate-800 backdrop-blur-xl">

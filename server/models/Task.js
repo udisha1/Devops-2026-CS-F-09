@@ -32,6 +32,11 @@ const TaskSchema = new mongoose.Schema(
       type: Boolean, 
       default: false 
     },
+    status: {
+      type: String,
+      enum: ['todo', 'in-progress', 'completed'],
+      default: 'todo'
+    },
     subtasks: [
       {
         title: { type: String, required: true },
@@ -46,5 +51,19 @@ const TaskSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Middleware to keep isCompleted and status in sync
+TaskSchema.pre('save', function (next) {
+  if (this.isModified('isCompleted') && !this.isModified('status')) {
+    this.status = this.isCompleted ? 'completed' : 'todo';
+  } else if (this.isModified('status') && !this.isModified('isCompleted')) {
+    this.isCompleted = this.status === 'completed';
+  } else if (this.status === 'completed') {
+    this.isCompleted = true;
+  } else if (this.isCompleted && this.status !== 'completed') {
+    this.status = 'completed';
+  }
+  next();
+});
 
 module.exports = mongoose.model('Task', TaskSchema);

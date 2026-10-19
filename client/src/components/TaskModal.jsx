@@ -17,6 +17,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task = null, themeC
   const [customCategory, setCustomCategory] = useState('');
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [priority, setPriority] = useState('Medium');
+  const [status, setStatus] = useState('todo');
   const [dueDate, setDueDate] = useState('');
   const [eisenhowerQuadrant, setEisenhowerQuadrant] = useState('auto');
   const [subtasks, setSubtasks] = useState([]);
@@ -57,6 +58,8 @@ export default function TaskModal({ isOpen, onClose, onSave, task = null, themeC
           setCustomCategory('');
         }
         setPriority(task.priority || 'Medium');
+        const initialStatus = task.status || (task.isCompleted ? 'completed' : 'todo');
+        setStatus(initialStatus);
         setDueDate(formatDateTimeLocal(task.dueDate));
         setEisenhowerQuadrant(task.eisenhowerQuadrant || 'auto');
         setSubtasks(task.subtasks ? [...task.subtasks] : []);
@@ -68,6 +71,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task = null, themeC
         setCustomCategory('');
         setIsCustomCategory(false);
         setPriority('Medium');
+        setStatus('todo');
         setDueDate('');
         setEisenhowerQuadrant('auto');
         setSubtasks([]);
@@ -143,6 +147,8 @@ export default function TaskModal({ isOpen, onClose, onSave, task = null, themeC
       description: description.trim(),
       category: finalCategory,
       priority,
+      status,
+      isCompleted: status === 'completed',
       dueDate: dueDate ? new Date(dueDate).toISOString() : null,
       eisenhowerQuadrant,
       subtasks: cleanedSubtasks
@@ -294,6 +300,36 @@ export default function TaskModal({ isOpen, onClose, onSave, task = null, themeC
                   );
                 })}
               </div>
+            </div>
+          </div>
+
+          {/* Status Selector */}
+          <div>
+            <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">
+              Status
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { id: 'todo', label: 'To Do', activeClass: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' },
+                { id: 'in-progress', label: 'In Progress', activeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
+                { id: 'completed', label: 'Completed', activeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' }
+              ].map(s => {
+                const isSelected = status === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setStatus(s.id)}
+                    className={`py-2 px-1 text-center rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${
+                      isSelected
+                        ? `${s.activeClass} shadow-sm scale-102`
+                        : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

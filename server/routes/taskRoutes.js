@@ -53,8 +53,17 @@ router.get('/today', async (req, res) => {
 // Create task for the logged-in user
 router.post('/', async (req, res) => {
   try {
+    const data = { ...req.body };
+    if (data.status === 'completed') {
+      data.isCompleted = true;
+    } else if (data.isCompleted) {
+      data.status = 'completed';
+    } else if (!data.status) {
+      data.status = 'todo';
+    }
+
     const newTask = new Task({
-      ...req.body,
+      ...data,
       user: req.user.id
     });
     const savedTask = await newTask.save();
@@ -72,9 +81,16 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Task not found or unauthorized' });
     }
 
+    const updates = { ...req.body };
+    if (updates.status !== undefined && updates.isCompleted === undefined) {
+      updates.isCompleted = updates.status === 'completed';
+    } else if (updates.isCompleted !== undefined && updates.status === undefined) {
+      updates.status = updates.isCompleted ? 'completed' : (task.status === 'in-progress' ? 'in-progress' : 'todo');
+    }
+
     const updatedTask = await Task.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updates,
       { new: true, runValidators: true }
     );
     res.status(200).json(updatedTask);

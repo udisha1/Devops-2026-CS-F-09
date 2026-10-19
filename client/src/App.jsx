@@ -11,11 +11,66 @@ import FeynmanPartner from './components/FeynmanPartner'
 import FocusZone from './components/FocusZone'
 import TaskModal from './components/TaskModal'
 import EisenhowerMatrix from './components/EisenhowerMatrix'
-import { BarChart3, Search, Filter, ArrowUpDown } from 'lucide-react'
+import { BarChart3, Search, Filter, ArrowUpDown, LayoutGrid, Columns3, List } from 'lucide-react'
 
 const THEMES = {
+  sunrise: {
+    name: '🌅 Sunrise Radiance',
+    bgClass: 'bg-[#0e0a14]',
+    etherColors: ['#F59E0B', '#FB923C', '#F43F5E'],
+    glowColors: ['#f59e0b', '#fb923c', '#f43f5e'],
+    glowColorRaw: '35 95 60',
+    cardBg: '#161014',
+    highlightText: 'text-amber-400',
+    highlightBorder: 'border-amber-500/30',
+    particleHighlight: '#f59e0b',
+  },
+  oasis: {
+    name: '🌿 Zen Oasis',
+    bgClass: 'bg-[#07130f]',
+    etherColors: ['#10B981', '#06B6D4', '#34D399'],
+    glowColors: ['#10b981', '#34d399', '#06b6d4'],
+    glowColorRaw: '155 85 45',
+    cardBg: '#0b1612',
+    highlightText: 'text-emerald-400',
+    highlightBorder: 'border-emerald-500/30',
+    particleHighlight: '#10b981',
+  },
+  aurora: {
+    name: '🌌 Cosmic Aurora',
+    bgClass: 'bg-[#080d18]',
+    etherColors: ['#00F2FE', '#4FACFE', '#A855F7'],
+    glowColors: ['#06b6d4', '#a855f7', '#ec4899'],
+    glowColorRaw: '190 85 55',
+    cardBg: '#0d101d',
+    highlightText: 'text-cyan-400',
+    highlightBorder: 'border-cyan-500/30',
+    particleHighlight: '#06b6d4',
+  },
+  blossom: {
+    name: '🌸 Sakura Blossom',
+    bgClass: 'bg-[#130714]',
+    etherColors: ['#F472B6', '#FB7185', '#C084FC'],
+    glowColors: ['#f472b6', '#fb7185', '#c084fc'],
+    glowColorRaw: '330 85 60',
+    cardBg: '#180f1b',
+    highlightText: 'text-pink-400',
+    highlightBorder: 'border-pink-500/30',
+    particleHighlight: '#f472b6',
+  },
+  ocean: {
+    name: '🌊 Ocean Serenity',
+    bgClass: 'bg-[#06121c]',
+    etherColors: ['#38BDF8', '#0EA5E9', '#2DD4BF'],
+    glowColors: ['#38bdf8', '#2dd4bf', '#0ea5e9'],
+    glowColorRaw: '200 85 50',
+    cardBg: '#0b1620',
+    highlightText: 'text-sky-400',
+    highlightBorder: 'border-sky-500/30',
+    particleHighlight: '#38bdf8',
+  },
   cyberpunk: {
-    name: 'Cyberpunk Neon',
+    name: '⚡ Cyberpunk Neon',
     bgClass: 'bg-slate-950',
     etherColors: ['#5227FF', '#FF9FFC', '#B497CF'],
     glowColors: ['#c084fc', '#f472b6', '#38bdf8'],
@@ -24,39 +79,6 @@ const THEMES = {
     highlightText: 'text-indigo-400',
     highlightBorder: 'border-purple-500/30',
     particleHighlight: '#8b5cf6',
-  },
-  deepspace: {
-    name: 'Deep Space',
-    bgClass: 'bg-neutral-950',
-    etherColors: ['#00F2FE', '#4FACFE', '#050515'],
-    glowColors: ['#06b6d4', '#10b981', '#3b82f6'],
-    glowColorRaw: '180 80 40',
-    cardBg: '#091214',
-    highlightText: 'text-cyan-400',
-    highlightBorder: 'border-cyan-500/30',
-    particleHighlight: '#06b6d4',
-  },
-  sunset: {
-    name: 'Sunset Flare',
-    bgClass: 'bg-stone-950',
-    etherColors: ['#FF3366', '#FF9933', '#2a0a0a'],
-    glowColors: ['#f97316', '#ec4899', '#e11d48'],
-    glowColorRaw: '15 90 60',
-    cardBg: '#1c0c0f',
-    highlightText: 'text-orange-400',
-    highlightBorder: 'border-orange-500/30',
-    particleHighlight: '#f97316',
-  },
-  lavender: {
-    name: 'Electric Violet',
-    bgClass: 'bg-slate-950',
-    etherColors: ['#8A2387', '#E94057', '#1a052e'],
-    glowColors: ['#a855f7', '#6366f1', '#ec4899'],
-    glowColorRaw: '270 80 50',
-    cardBg: '#130f1c',
-    highlightText: 'text-purple-400',
-    highlightBorder: 'border-purple-500/30',
-    particleHighlight: '#a855f7',
   }
 }
 
@@ -70,16 +92,27 @@ const App = () => {
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [sortBy, setSortBy] = useState('createdAt-desc')
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('taskflow-theme') || 'cyberpunk'
+    const saved = localStorage.getItem('taskflow-theme')
+    if (saved === 'sunset') return 'sunrise'
+    if (saved === 'lavender') return 'blossom'
+    if (saved === 'deepspace') return 'aurora'
+    return saved && THEMES[saved] ? saved : 'sunrise'
   })
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [dashboardView, setDashboardView] = useState(() => {
+    return localStorage.getItem('taskflow-dashboard-view') || 'grid'
+  })
   const [taskModalState, setTaskModalState] = useState({ isOpen: false, task: null })
 
-  const currentTheme = THEMES[theme] || THEMES.cyberpunk
+  const currentTheme = THEMES[theme] || THEMES.sunrise || THEMES.cyberpunk
 
   useEffect(() => {
     localStorage.setItem('taskflow-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    localStorage.setItem('taskflow-dashboard-view', dashboardView)
+  }, [dashboardView])
 
  
   const [appLoading, setAppLoading] = useState(true)
@@ -235,7 +268,13 @@ const App = () => {
 
   const handleUpdateTask = async (id, updatedFields) => {
     try {
-      const res = await axios.put(`${API_URL}/${id}`, updatedFields)
+      const fieldsToSend = { ...updatedFields }
+      if (fieldsToSend.status !== undefined && fieldsToSend.isCompleted === undefined) {
+        fieldsToSend.isCompleted = fieldsToSend.status === 'completed'
+      } else if (fieldsToSend.isCompleted !== undefined && fieldsToSend.status === undefined) {
+        fieldsToSend.status = fieldsToSend.isCompleted ? 'completed' : 'todo'
+      }
+      const res = await axios.put(`${API_URL}/${id}`, fieldsToSend)
       setTasks(tasks.map((t) => (t._id === id ? res.data : t)))
       fetchTodayTasks()
     } catch (err) {
@@ -274,9 +313,44 @@ const App = () => {
    
       {appLoading && <Preloader onComplete={() => setAppLoading(false)} />}
 
-      <div className={`min-h-screen ${currentTheme.bgClass} relative overflow-hidden transition-colors duration-500`}>
+      <div className={`min-h-screen ${currentTheme.bgClass} relative overflow-hidden transition-colors duration-700`}>
 
-        <div className="fixed inset-0 z-0 pointer-events-none">
+        {/* Luminous & Positive Ambient Aura Lighting Layer */}
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none">
+          {/* Subtle Aesthetic Grid Texture */}
+          <div 
+            className="absolute inset-0 opacity-[0.035] transition-opacity duration-1000"
+            style={{
+              backgroundImage: `radial-gradient(${currentTheme.glowColors[0]} 1.2px, transparent 1.2px)`,
+              backgroundSize: '36px 36px'
+            }}
+          />
+
+          {/* Primary Warm / Uplifting Radiant Aura (Top-Right) */}
+          <div
+            className="absolute -top-32 -right-32 w-[650px] h-[650px] rounded-full blur-[130px] opacity-25 animate-aura-drift transition-all duration-1000"
+            style={{
+              background: `radial-gradient(circle, ${currentTheme.glowColors[0]} 0%, ${currentTheme.glowColors[1] || currentTheme.glowColors[0]} 55%, transparent 75%)`
+            }}
+          />
+
+          {/* Secondary Calming / Serene Aura (Bottom-Left) */}
+          <div
+            className="absolute -bottom-40 -left-40 w-[700px] h-[700px] rounded-full blur-[140px] opacity-20 animate-aura-drift-reverse transition-all duration-1000"
+            style={{
+              background: `radial-gradient(circle, ${currentTheme.glowColors[1] || currentTheme.glowColors[0]} 0%, ${currentTheme.glowColors[2] || currentTheme.glowColors[0]} 55%, transparent 75%)`
+            }}
+          />
+
+          {/* Center Ethereal Luminous Glow */}
+          <div
+            className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[550px] h-[550px] rounded-full blur-[150px] opacity-15 animate-aura-pulse transition-all duration-1000"
+            style={{
+              background: `radial-gradient(circle, ${currentTheme.glowColors[2] || currentTheme.glowColors[0]} 0%, transparent 70%)`
+            }}
+          />
+
+          {/* Interactive Liquid Ether Fluid Simulation */}
           <LiquidEther
             colors={currentTheme.etherColors}
             mouseForce={19}
@@ -318,12 +392,21 @@ const App = () => {
             <main className="flex-1 min-w-0 pb-12">
 
             <style>{`
+              .animate-aura-drift {
+                animation: aura-drift 18s ease-in-out infinite;
+              }
+              .animate-aura-drift-reverse {
+                animation: aura-drift-reverse 22s ease-in-out infinite;
+              }
+              .animate-aura-pulse {
+                animation: aura-pulse 14s ease-in-out infinite;
+              }
               @keyframes aura-drift {
                 0%, 100% {
                   transform: translate(0px, 0px) scale(1);
                 }
                 50% {
-                  transform: translate(30px, -20px) scale(1.15);
+                  transform: translate(45px, -30px) scale(1.15);
                 }
               }
               @keyframes aura-drift-reverse {
@@ -331,7 +414,17 @@ const App = () => {
                   transform: translate(0px, 0px) scale(1.15);
                 }
                 50% {
-                  transform: translate(-30px, 20px) scale(0.9);
+                  transform: translate(-45px, 30px) scale(0.9);
+                }
+              }
+              @keyframes aura-pulse {
+                0%, 100% {
+                  transform: translate(-50%, 0) scale(1);
+                  opacity: 0.15;
+                }
+                50% {
+                  transform: translate(-50%, -20px) scale(1.12);
+                  opacity: 0.28;
                 }
               }
               @keyframes fade-in-slide-up {
@@ -494,6 +587,51 @@ const App = () => {
                       </select>
                     </div>
 
+                    {/* View Switcher Segmented Control */}
+                    <div className="flex items-center p-0.5 bg-slate-950/80 border border-slate-800 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => setDashboardView('grid')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          dashboardView === 'grid'
+                            ? `${currentTheme.highlightText} bg-white/10 shadow-sm`
+                            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                        }`}
+                        title="Card Grid View"
+                      >
+                        <LayoutGrid size={13} />
+                        <span className="hidden sm:inline">Grid</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setDashboardView('kanban')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          dashboardView === 'kanban'
+                            ? `${currentTheme.highlightText} bg-white/10 shadow-sm`
+                            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                        }`}
+                        title="Kanban Board View"
+                      >
+                        <Columns3 size={13} />
+                        <span className="hidden sm:inline">Kanban</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setDashboardView('list')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          dashboardView === 'list'
+                            ? `${currentTheme.highlightText} bg-white/10 shadow-sm`
+                            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                        }`}
+                        title="Compact List / Table View"
+                      >
+                        <List size={13} />
+                        <span className="hidden sm:inline">List</span>
+                      </button>
+                    </div>
+
                     {/* Task Count Badge */}
                     <span className="text-[11px] font-bold text-slate-400 px-2.5 py-1 rounded-lg bg-white/5 hidden xl:inline">
                       {filteredAndSortedTasks.length} {filteredAndSortedTasks.length === 1 ? 'task' : 'tasks'}
@@ -506,7 +644,9 @@ const App = () => {
                   onUpdate={handleUpdateTask}
                   onDelete={handleDeleteTask}
                   onEdit={(task) => setTaskModalState({ isOpen: true, task })}
+                  onAddTask={handleAddTask}
                   themeConfig={currentTheme}
+                  viewMode={dashboardView}
                 />
               </div>
             )}
