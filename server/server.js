@@ -16,12 +16,17 @@ const authRoutes = require('./routes/authRoutes');
 const feynmanRoutes = require('./routes/feynmanRoutes');
 const Task = require('./models/Task');
 const cron = require('node-cron');
+const { metricsMiddleware, metricsEndpoint } = require('./middleware/metrics');
 
 const app = express();
 
 
 app.use(express.json());
 app.use(cors());
+app.use(metricsMiddleware);
+
+// Prometheus scraping endpoint
+app.get('/metrics', metricsEndpoint);
 
 
 app.use('/api/tasks', taskRoutes);

@@ -1,6 +1,6 @@
 # Taskflow App - Docker & Kubernetes Deployment Guide
 
-This guide provides complete instructions for containerizing and deploying **Taskflow App** using **Docker** and **Kubernetes**.
+This guide provides complete instructions for containerizing, monitoring, and deploying **Taskflow App** using **Docker**, **Kubernetes**, **Prometheus**, and **Grafana**.
 
 ---
 
@@ -23,18 +23,27 @@ This guide provides complete instructions for containerizing and deploying **Tas
                                      | ClusterIP:5000 (/api)
                                      v
                  +---------------------------------------+
-                 |     Backend Pod (taskflow-server)     |
-                 |  - Express / Node.js API              |
-                 |  - JWT Auth & Gemini AI endpoints     |
-                 +-------------------+-------------------+
-                                     |
-                   +-----------------+-----------------+
-                   |                                   |
-                   v                                   v
-+------------------------------------+  +-------------------------------+
-| In-Cluster MongoDB (Optional)      |  | MongoDB Atlas (Cloud)         |
-| Service: taskflow-mongodb:27017    |  | mongodb+srv://...             |
-+------------------------------------+  +-------------------------------+
+                 |     Backend Pod (taskflow-server)     |  <---+
+                 |  - Express / Node.js API              |      |
+                 |  - JWT Auth & Gemini AI endpoints     |      | Scrapes /metrics
+                 |  - Prometheus metrics instrumentation |      |
+                 +-------------------+-------------------+      |
+                                     |                          |
+                   +-----------------+-----------------+        |
+                   |                                   |        |
+                   v                                   v        |
++------------------------------------+  +--------------------+  |
+| In-Cluster MongoDB (Optional)      |  | MongoDB Atlas      |  |
+| Service: taskflow-mongodb:27017    |  | mongodb+srv://...  |  |
++------------------------------------+  +--------------------+  |
+                                                                |
+        +-------------------------------------------------------+
+        |
+        v
++-----------------------+           +-----------------------+
+|  Prometheus Server    | --------> |   Grafana Dashboards  |
+|  Port: 9090 / 30090   |           |   Port: 3001 / 30001  |
++-----------------------+           +-----------------------+
 ```
 
 ---
@@ -43,33 +52,37 @@ This guide provides complete instructions for containerizing and deploying **Tas
 
 1. **Docker Desktop**:
    - Ensure Docker Desktop is installed and running.
-   - To verify:
-     ```powershell
-     docker --version
-     ```
+   - Verify with `docker --version`.
 2. **Kubernetes Cluster**:
-   - **Option A (Simplest - Docker Desktop)**:
-     - Open Docker Desktop settings (Gear icon) -> **Kubernetes** -> Check **Enable Kubernetes** -> Click **Apply & restart**.
-   - **Option B (Minikube)**:
-     - Run `minikube start`
-   - **Option C (Cloud / Remote)**:
-     - Ensure your `kubectl` context is configured (`kubectl config current-context`).
+   - **Docker Desktop**: Settings -> **Kubernetes** -> **Enable Kubernetes** -> **Apply & restart**.
+   - **Minikube**: Run `minikube start`.
+   - **Cloud**: Configure your context (`kubectl config current-context`).
 
 ---
 
-## 2. Quick Local Testing with Docker Compose
+## 2. Local Multi-Container Testing with Monitoring
 
-Before deploying to Kubernetes, you can test the entire multi-container stack locally:
+Start the entire application, database, and monitoring stack with Docker Compose:
 
 ```powershell
-# 1. Build and start all containers (MongoDB, Server, Client)
-docker compose up --build
+docker compose up -d
+```
 
-# 2. Access the application in your browser:
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:5001/healthz
+### Accessible Services:
 
-# 3. Stop containers when finished:
+| Service | Accessible URL | Credentials / Notes |
+| :--- | :--- | :--- |
+| **Frontend Web App** | [http://localhost:3000](http://localhost:3000) | Main React App |
+| **Backend API Health** | [http://localhost:5001/healthz](http://localhost:5001/healthz) | Returns health & DB status |
+| **Backend Metrics** | [http://localhost:5001/metrics](http://localhost:5001/metrics) | Raw Prometheus metrics |
+| **Prometheus Dashboard** | [http://localhost:9090](http://localhost:9090) | Targets & metric queries |
+| **Grafana Dashboards** | [http://localhost:3001](http://localhost:3001) | **User:** `admin`, **Password:** `admin` |
+
+> [!TIP]
+> Grafana automatically loads the **Taskflow Overview** dashboard (`http://localhost:3001/d/taskflow-overview/taskflow-overview`) with charts for HTTP Request Rate, p95/p50 Latencies, Process CPU & Memory usage, and MongoDB status!
+
+To shut down:
+```powershell
 docker compose down
 ```
 
@@ -79,59 +92,40 @@ docker compose down
 
 ### Step 3.1: Build Docker Images
 
-Build both images locally so Kubernetes can run them:
-
 ```powershell
-# Build Backend Server Image
+# Build Backend Server Image (with prom-client)
 docker build -t taskflow-server:latest ./server
 
 # Build Frontend Client Image
 docker build -t taskflow-client:latest ./client
 ```
 
-> **Note for Minikube users:** If using Minikube, run `minikube docker-env | Invoke-Expression` (PowerShell) or `eval $(minikube docker-env)` (Bash) before building so images are stored inside the Minikube Docker daemon.
-
 ---
 
 ### Step 3.2: Configure Secrets & Database
 
 Review [k8s/secret.yaml](k8s/secret.yaml):
-- By default, it contains your MongoDB Atlas connection string, JWT Secret, and Gemini API key.
-- If you prefer to run MongoDB inside the Kubernetes cluster instead of Atlas:
-  1. Open [k8s/kustomization.yaml](k8s/kustomization.yaml) and uncomment `- mongodb.yaml`.
-  2. In [k8s/secret.yaml](k8s/secret.yaml), set `MONGO_URI` to `"mongodb://taskflow-mongodb:27017/taskflow"`.
+- Configure your MongoDB connection string, JWT Secret, and Gemini API key.
+- `k8s/secret.yaml` is added to `.gitignore` so your private credentials are never pushed to GitHub.
 
 ---
 
 ### Step 3.3: Deploy to Kubernetes
 
-Deploy all resources with a single command:
+Deploy all resources (Application + Prometheus + Grafana) with a single command:
 
 ```powershell
-# Deploy everything using Kustomize
 kubectl apply -k k8s/
-
-# Or use the provided PowerShell helper script:
-.\deploy-k8s.ps1
 ```
 
-Or deploy individual manifests in order:
+Or run the helper script:
 ```powershell
-kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/secret.yaml
-kubectl apply -f k8s/server.yaml
-kubectl apply -f k8s/client.yaml
-# Optional:
-# kubectl apply -f k8s/mongodb.yaml
-# kubectl apply -f k8s/ingress.yaml
+.\deploy-k8s.ps1
 ```
 
 ---
 
 ### Step 3.4: Verify Deployment
-
-Check the status of your pods and services:
 
 ```powershell
 # Check pods in the 'taskflow' namespace
@@ -143,59 +137,43 @@ kubectl get svc -n taskflow
 
 Example expected output:
 ```
-NAME                               READY   STATUS    RESTARTS   AGE
-taskflow-client-7f888f4b5-x2n8m    1/1     Running   0          45s
-taskflow-client-7f888f4b5-z9jlp    1/1     Running   0          45s
-taskflow-server-675cf88db-4v8m2    1/1     Running   0          45s
-taskflow-server-675cf88db-lw9k2    1/1     Running   0          45s
+NAME                                   READY   STATUS    RESTARTS   AGE
+taskflow-client-7f888f4b5-x2n8m        1/1     Running   0          1m
+taskflow-client-7f888f4b5-z9jlp        1/1     Running   0          1m
+taskflow-server-675cf88db-4v8m2        1/1     Running   0          1m
+taskflow-server-675cf88db-lw9k2        1/1     Running   0          1m
+taskflow-prometheus-6bd5c4f8d-4b82x    1/1     Running   0          1m
+taskflow-grafana-79d5f78b9-k82mx       1/1     Running   0          1m
 ```
 
 ---
 
-### Step 3.5: Access the Application
+### Step 3.5: Access Kubernetes Services
 
-1. **Via NodePort (Default)**:
-   - The frontend service is exposed on NodePort **30080**.
-   - Open your browser to: **`http://localhost:30080`**
-2. **Via Port-Forwarding (Alternative)**:
-   ```powershell
-   kubectl port-forward svc/taskflow-client 8080:80 -n taskflow
-   ```
-   Open `http://localhost:8080`.
-3. **Via Ingress (If Ingress Controller is installed)**:
-   - Apply `k8s/ingress.yaml`:
-     ```powershell
-     kubectl apply -f k8s/ingress.yaml
-     ```
-   - Access at `http://localhost`.
+| Service | NodePort | Browser URL |
+| :--- | :--- | :--- |
+| **Frontend** | `30080` | [http://localhost:30080](http://localhost:30080) |
+| **Prometheus** | `30090` | [http://localhost:30090](http://localhost:30090) |
+| **Grafana** | `30001` | [http://localhost:30001](http://localhost:30001) |
 
 ---
 
 ## 4. Useful Operations & Troubleshooting
 
+### View Metrics in Real Time
+```powershell
+# Query total HTTP requests
+curl http://localhost:5001/metrics
+```
+
 ### View Pod Logs
 ```powershell
-# Server logs
 kubectl logs -l app=taskflow-server -n taskflow -f
-
-# Client logs
-kubectl logs -l app=taskflow-client -n taskflow -f
+kubectl logs -l app=taskflow-prometheus -n taskflow -f
+kubectl logs -l app=taskflow-grafana -n taskflow -f
 ```
 
-### Restart Deployments
+### Teardown
 ```powershell
-kubectl rollout restart deployment/taskflow-server -n taskflow
-kubectl rollout restart deployment/taskflow-client -n taskflow
-```
-
-### Scaling Up / Down
-```powershell
-# Scale server to 4 replicas
-kubectl scale deployment/taskflow-server --replicas=4 -n taskflow
-```
-
-### Clean Up / Teardown
-```powershell
-# Remove all deployed resources
 kubectl delete -k k8s/
 ```

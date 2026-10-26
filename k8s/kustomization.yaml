@@ -12,3 +12,5 @@ resources:
   - server.yaml
   - client.yaml
   - ingress.yaml
+  - monitoring/prometheus.yaml
+  - monitoring/grafana.yaml

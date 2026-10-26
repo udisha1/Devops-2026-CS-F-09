@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  # Scrape the Taskflow Node.js Express backend
+  - job_name: 'taskflow-server'
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['taskflow-server:5000']
+        labels:
+          app: 'taskflow-backend'
+          env: 'docker'
+
+  # Self-monitor Prometheus
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
