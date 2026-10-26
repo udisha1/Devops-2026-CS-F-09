@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # MongoDB Database Service (for local containerized testing)
+  taskflow-mongodb:
+    image: mongo:7
+    container_name: taskflow-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=taskflow
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - taskflow-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Express Backend API Service
+  taskflow-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: taskflow-server
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      # By default connects to the containerized MongoDB service above.
+      # You can override this with MongoDB Atlas URI in an .env file.
+      - MONGO_URI=${MONGO_URI:-mongodb://taskflow-mongodb:27017/taskflow}
+      - JWT_SECRET=${JWT_SECRET:-taskflow_jwt_secret_token_2026_key_99}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      taskflow-mongodb:
+        condition: service_healthy
+    networks:
+      - taskflow-network
+
+  # React Frontend (Nginx) Service
+  taskflow-client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: taskflow-client
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - BACKEND_URL=http://taskflow-server:5000
+    depends_on:
+      - taskflow-server
+    networks:
+      - taskflow-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  taskflow-network:
+    driver: bridge

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Circle, Trash2, Calendar, Sparkles, Pencil, Plus } from 'lucide-react';
 import axios from 'axios';
+import { API_URL } from '../config/api';
 import BorderGlow from './BorderGlow';
 
 export default function TaskCard({ task, onUpdate, onDelete, onEdit, themeConfig }) {
@@ -29,7 +30,7 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit, themeConfig
   const handleBreakdown = async () => {
     setIsGenerating(true);
     try {
-      const res = await axios.post(`http://localhost:5001/api/tasks/${task._id}/breakdown`);
+      const res = await axios.post(`${API_URL}/${task._id}/breakdown`);
       onUpdate(task._id, res.data); // Update the tasks state in App.jsx
     } catch (err) {
       console.error("Error breaking down task:", err);

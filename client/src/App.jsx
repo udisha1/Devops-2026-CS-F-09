@@ -12,6 +12,7 @@ import FocusZone from './components/FocusZone'
 import TaskModal from './components/TaskModal'
 import EisenhowerMatrix from './components/EisenhowerMatrix'
 import { BarChart3, Search, Filter, ArrowUpDown, LayoutGrid, Columns3, List } from 'lucide-react'
+import { API_URL, AUTH_URL } from './config/api'
 
 const THEMES = {
   sunrise: {
@@ -82,7 +83,7 @@ const THEMES = {
   }
 }
 
-const API_URL = 'http://localhost:5001/api/tasks'
+// API_URL is imported from ./config/api
 
 const App = () => {
   const [tasks, setTasks] = useState([])
@@ -168,7 +169,7 @@ const App = () => {
     const verifyToken = async () => {
       if (token) {
         try {
-          const res = await axios.get('http://localhost:5001/api/auth/me', {
+          const res = await axios.get(`${AUTH_URL}/me`, {
             headers: { Authorization: `Bearer ${token}` },
           })
           setUser(res.data)

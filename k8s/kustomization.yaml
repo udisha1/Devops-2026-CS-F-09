@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: taskflow
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.example.yaml
+  # Uncomment mongodb.yaml if you want to deploy in-cluster MongoDB instead of Atlas:
+  # - mongodb.yaml
+  - server.yaml
+  - client.yaml
+  - ingress.yaml

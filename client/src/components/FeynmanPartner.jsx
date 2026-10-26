@@ -6,7 +6,7 @@ import {
   ArrowLeft, Volume2, VolumeX, RefreshCw
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:5001/api/feynman';
+import { FEYNMAN_URL as API_BASE } from '../config/api';
 
 export default function FeynmanPartner({ themeConfig }) {
   // Concept setup state

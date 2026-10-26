@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { PARSE_TASK_URL } from '../config/api';
 import { Sparkles, Loader2, Plus } from 'lucide-react';
 
 export default function TaskForm({ onAddTask, onOpenManualModal, themeConfig }) {
@@ -13,7 +14,7 @@ export default function TaskForm({ onAddTask, onOpenManualModal, themeConfig }) 
     setIsLoading(true);
     try {
       console.log("Asking AI to parse...");
-      const aiResponse = await axios.post('http://localhost:5001/api/parse-task', {
+      const aiResponse = await axios.post(PARSE_TASK_URL, {
         text: smartText
       });
       

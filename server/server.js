@@ -29,6 +29,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/feynman', feynmanRoutes);
 
 
+app.get('/healthz', (req, res) => {
+  const isMongoReady = mongoose.connection.readyState === 1;
+  res.status(isMongoReady ? 200 : 503).json({
+    status: isMongoReady ? 'healthy' : 'unhealthy',
+    database: isMongoReady ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/', (req, res) => {
   res.send('TaskFlow API is running...');
 });
