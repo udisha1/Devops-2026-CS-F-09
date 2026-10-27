@@ -11,11 +11,14 @@ pipeline {
             steps { bat 'docker compose build' }
         }
         stage('Deploy') {
-            steps {
-                bat 'docker compose up -d'
-                bat 'docker ps'
-            }
+    steps {
+        withCredentials([file(credentialsId: 'taskflow-server-env', variable: 'ENV_FILE')]) {
+            bat 'copy /Y "%ENV_FILE%" server\\.env'
+            bat 'docker compose up -d'
+            bat 'docker ps'
         }
+    }
+}
     }
     post {
         failure { echo 'Pipeline failed, check console output' }
