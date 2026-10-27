@@ -106,21 +106,6 @@ docker compose up -d
 > 2. Go to **Dashboards** -> **Taskflow** -> **Taskflow Overview**.
 > 3. Enjoy live graphs of HTTP request rates, p95/p50 latency, active connections, and Node.js CPU & Memory!
 
-#### Useful Docker Compose Commands:
-```powershell
-# View logs of all services
-docker compose logs -f
-
-# View logs of backend server only
-docker compose logs -f taskflow-server
-
-# Restart services
-docker compose restart
-
-# Stop and remove all containers
-docker compose down
-```
-
 ---
 
 ### Method 2: Kubernetes Deployment (K8s)
@@ -159,17 +144,6 @@ kubectl get pods -n taskflow
 kubectl get svc -n taskflow
 ```
 
-Expected output:
-```text
-NAME                                   READY   STATUS    RESTARTS   AGE
-taskflow-client-xxxxxxxxx-xxxxx        1/1     Running   0          45s
-taskflow-client-xxxxxxxxx-xxxxx        1/1     Running   0          45s
-taskflow-server-xxxxxxxxx-xxxxx        1/1     Running   0          45s
-taskflow-server-xxxxxxxxx-xxxxx        1/1     Running   0          45s
-taskflow-prometheus-xxxxxxxxx-xxxxx    1/1     Running   0          45s
-taskflow-grafana-xxxxxxxxx-xxxxx       1/1     Running   0          45s
-```
-
 #### Step 5: Access your Kubernetes services (via NodePort)
 
 | Service | NodePort | Browser URL |
@@ -177,11 +151,6 @@ taskflow-grafana-xxxxxxxxx-xxxxx       1/1     Running   0          45s
 | **Frontend Web App** | `30080` | **[http://localhost:30080](http://localhost:30080)** |
 | **Grafana Monitoring** | `30001` | **[http://localhost:30001](http://localhost:30001)** |
 | **Prometheus UI** | `30090` | **[http://localhost:30090](http://localhost:30090)** |
-
-#### To Teardown Kubernetes Deployment:
-```powershell
-kubectl delete -k k8s/
-```
 
 ---
 
