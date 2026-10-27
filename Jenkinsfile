@@ -1,67 +1,23 @@
 pipeline {
     agent any
-
     stages {
-        stage('Checkout SCM') {
-            steps {
-                echo 'Checking out code from Git...'
-                checkout scm
-            }
+        stage('Checkout') {
+            steps { checkout scm }
         }
-
-        stage('Install Dependencies') {
-            steps {
-                echo 'Installing dependencies for Root, Client, and Server...'
-                script {
-                    if (isUnix()) {
-                        sh 'npm install'
-                        sh 'cd client && npm install'
-                        sh 'cd server && npm install'
-                    } else {
-                        bat 'npm install'
-                        bat 'cd client && npm install'
-                        bat 'cd server && npm install'
-                    }
-                }
-            }
+        stage('Clean Old Containers') {
+            steps { bat 'docker compose down' }
         }
-
-        stage('Build Frontend') {
-            steps {
-                echo 'Building React client...'
-                script {
-                    if (isUnix()) {
-                        sh 'cd client && npm run build'
-                    } else {
-                        bat 'cd client && npm run build'
-                    }
-                }
-            }
+        stage('Build') {
+            steps { bat 'docker compose build' }
         }
-
-        stage('Verify Build') {
+        stage('Deploy') {
             steps {
-                echo 'Verifying built artifacts...'
-                script {
-                    if (isUnix()) {
-                        sh 'ls -la client/dist'
-                    } else {
-                        bat 'dir client\\dist'
-                    }
-                }
+                bat 'docker compose up -d'
+                bat 'docker ps'
             }
         }
     }
-
     post {
-        always {
-            echo 'Pipeline execution complete.'
-        }
-        success {
-            echo 'Build and verification completed successfully!'
-        }
-        failure {
-            echo 'Build failed. Please inspect build logs.'
-        }
+        failure { echo 'Pipeline failed, check console output' }
     }
 }
