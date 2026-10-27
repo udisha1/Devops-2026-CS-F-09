@@ -96,6 +96,22 @@ services:
     networks:
       - taskflow-network
 
+  # k6 Load Tester Service (Runs on demand to generate traffic for Grafana)
+  k6:
+    image: grafana/k6:latest
+    container_name: taskflow-k6
+    profiles:
+      - loadtest
+    volumes:
+      - ./k6:/scripts:ro
+    environment:
+      - TARGET_URL=http://taskflow-server:5000
+    depends_on:
+      - taskflow-server
+    command: run /scripts/load-test.js
+    networks:
+      - taskflow-network
+
 volumes:
   mongodb_data:
     driver: local
