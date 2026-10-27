@@ -17,6 +17,13 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 # -------------------------------------------------------------
 COLLEGE_NAME = "Swami Keshvanand Institute of Technology, Management & Gramothan, Jaipur"
 DEPARTMENT_NAME = "Department of Computer Science & Engineering"
+
+# Mapping Git usernames / aliases to full student names
+AUTHOR_NAME_MAP = {
+    "Udisha": "Udisha Narayan",
+    "udisha": "Udisha Narayan",
+    "udisha1": "Udisha Narayan",
+}
 # -------------------------------------------------------------
 
 def get_repo_info():
@@ -83,6 +90,7 @@ def get_git_metrics(interval="weekly"):
             if len(parts) >= 5:
                 sha = parts[1].strip()
                 author = parts[2].strip()
+                author = AUTHOR_NAME_MAP.get(author, author)
                 date_str = parts[3].strip()
                 msg = parts[4].strip()
             else:
