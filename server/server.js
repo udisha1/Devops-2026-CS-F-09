@@ -1,3 +1,6 @@
+const path = require('path');
+const fs = require('fs');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 require('dotenv').config();
 const dns = require('dns');
 if (process.env.MONGO_URI && process.env.MONGO_URI.includes('mongodb+srv')) {
@@ -43,9 +46,15 @@ app.get('/healthz', (req, res) => {
   });
 });
 
-app.get('/', (req, res) => {
-  res.send('TaskFlow API is running...');
-});
+// Serve static client assets if built (for unified deployment on Render/Railway/Heroku)
+const clientDistPath = path.join(__dirname, '../client/dist');
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+} else {
+  app.get('/', (req, res) => {
+    res.send('TaskFlow API is running...');
+  });
+}
 
 const PORT = process.env.PORT || 5000;
 mongoose
@@ -163,6 +172,16 @@ app.post('/api/parse-task', async (req, res) => {
     });
   }
 });
+
+// SPA client-side routing fallback for non-API routes
+if (fs.existsSync(clientDistPath)) {
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path === '/metrics' || req.path === '/healthz') {
+      return next();
+    }
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // Daily Morning Task Reminder Scheduler
 async function sendDailyReminders() {
