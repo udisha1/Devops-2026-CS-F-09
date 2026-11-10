@@ -3,8 +3,12 @@ const fs = require('fs');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 require('dotenv').config();
 const dns = require('dns');
-if (process.env.MONGO_URI && process.env.MONGO_URI.includes('mongodb+srv')) {
-  dns.setServers(['8.8.8.8', '8.8.4.4']);
+if (!process.env.VERCEL && process.env.MONGO_URI && process.env.MONGO_URI.includes('mongodb+srv')) {
+  try {
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+  } catch (e) {
+    // ignore
+  }
 }
 
 const express = require('express');
@@ -27,6 +31,49 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(metricsMiddleware);
+
+const PORT = process.env.PORT || 5000;
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || Boolean(process.env.VERCEL);
+
+// Database connection logic with caching for serverless environments
+let cachedDbPromise = null;
+const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    return mongoose.connection;
+  }
+  if (!process.env.MONGO_URI) {
+    throw new Error('MONGO_URI environment variable is missing');
+  }
+  if (!cachedDbPromise) {
+    cachedDbPromise = mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 8000,
+    }).then((m) => {
+      console.log('Connected to MongoDB');
+      return m;
+    }).catch((err) => {
+      cachedDbPromise = null;
+      console.error('MongoDB connection error:', err.message);
+      throw err;
+    });
+  }
+  return cachedDbPromise;
+};
+
+// Middleware: ensure MongoDB is connected BEFORE handling any API routes
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path === '/healthz') {
+    try {
+      await connectDB();
+    } catch (err) {
+      console.error('Database connection middleware failed:', err.message);
+      return res.status(503).json({
+        message: 'Database connection failed',
+        error: err.message,
+      });
+    }
+  }
+  next();
+});
 
 // Prometheus scraping endpoint
 app.get('/metrics', metricsEndpoint);
@@ -64,57 +111,16 @@ if (fs.existsSync(clientDistPath)) {
   });
 }
 
-const PORT = process.env.PORT || 5000;
-const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || Boolean(process.env.VERCEL);
-
 if (!isVercel) {
-  if (process.env.MONGO_URI) {
-    mongoose
-      .connect(process.env.MONGO_URI)
-      .then(() => {
-        console.log('Connected to MongoDB');
-        app.listen(PORT, () => {
-          console.log(`Server listening on port ${PORT}`);
-        });
-      })
-      .catch((err) => {
-        console.error('MongoDB connection failed:', err.message);
-      });
-  } else {
+  connectDB().then(() => {
     app.listen(PORT, () => {
-      console.log(`Server listening on port ${PORT} (without MONGO_URI)`);
+      console.log(`Server listening on port ${PORT}`);
     });
-  }
-} else {
-  // Serverless environment (Vercel): ensure MongoDB connection is cached across invocations
-  let cachedPromise = null;
-  app.use(async (req, res, next) => {
-    if (mongoose.connection.readyState >= 1) {
-      return next();
-    }
-    if (process.env.MONGO_URI) {
-      if (!cachedPromise) {
-        cachedPromise = mongoose
-          .connect(process.env.MONGO_URI, {
-            serverSelectionTimeoutMS: 5000,
-          })
-          .then((m) => {
-            console.log('Connected to MongoDB (Serverless)');
-            return m;
-          })
-          .catch((err) => {
-            cachedPromise = null;
-            console.error('MongoDB serverless connection error:', err.message);
-            throw err;
-          });
-      }
-      try {
-        await cachedPromise;
-      } catch (err) {
-        // Logged above, allow request to proceed to error or route handling
-      }
-    }
-    next();
+  }).catch((err) => {
+    console.error('Initial DB connection failed:', err.message);
+    app.listen(PORT, () => {
+      console.log(`Server listening on port ${PORT} (without active DB connection)`);
+    });
   });
 }
 
