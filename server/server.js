@@ -37,11 +37,19 @@ app.use('/api/auth', authRoutes);
 app.use('/api/feynman', feynmanRoutes);
 
 
-app.get('/healthz', (req, res) => {
+app.get(['/healthz', '/api/healthz'], (req, res) => {
   const isMongoReady = mongoose.connection.readyState === 1;
   res.status(isMongoReady ? 200 : 503).json({
     status: isMongoReady ? 'healthy' : 'unhealthy',
     database: isMongoReady ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/api', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'TaskFlow API is running on Vercel',
     timestamp: new Date().toISOString(),
   });
 });
@@ -57,17 +65,58 @@ if (fs.existsSync(clientDistPath)) {
 }
 
 const PORT = process.env.PORT || 5000;
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || Boolean(process.env.VERCEL);
+
+if (!isVercel) {
+  if (process.env.MONGO_URI) {
+    mongoose
+      .connect(process.env.MONGO_URI)
+      .then(() => {
+        console.log('Connected to MongoDB');
+        app.listen(PORT, () => {
+          console.log(`Server listening on port ${PORT}`);
+        });
+      })
+      .catch((err) => {
+        console.error('MongoDB connection failed:', err.message);
+      });
+  } else {
     app.listen(PORT, () => {
-      console.log(`Server listening on port ${PORT}`);
+      console.log(`Server listening on port ${PORT} (without MONGO_URI)`);
     });
-  })
-  .catch((err) => {
-    console.error('MongoDB connection failed:', err.message);
+  }
+} else {
+  // Serverless environment (Vercel): ensure MongoDB connection is cached across invocations
+  let cachedPromise = null;
+  app.use(async (req, res, next) => {
+    if (mongoose.connection.readyState >= 1) {
+      return next();
+    }
+    if (process.env.MONGO_URI) {
+      if (!cachedPromise) {
+        cachedPromise = mongoose
+          .connect(process.env.MONGO_URI, {
+            serverSelectionTimeoutMS: 5000,
+          })
+          .then((m) => {
+            console.log('Connected to MongoDB (Serverless)');
+            return m;
+          })
+          .catch((err) => {
+            cachedPromise = null;
+            console.error('MongoDB serverless connection error:', err.message);
+            throw err;
+          });
+      }
+      try {
+        await cachedPromise;
+      } catch (err) {
+        // Logged above, allow request to proceed to error or route handling
+      }
+    }
+    next();
   });
+}
 
 
 app.post('/api/parse-task', async (req, res) => {
@@ -175,7 +224,7 @@ app.post('/api/parse-task', async (req, res) => {
 
 // SPA client-side routing fallback for non-API routes
 if (fs.existsSync(clientDistPath)) {
-  app.get('*', (req, res, next) => {
+  app.use((req, res, next) => {
     if (req.path.startsWith('/api') || req.path === '/metrics' || req.path === '/healthz') {
       return next();
     }
@@ -241,14 +290,18 @@ async function sendDailyReminders() {
   }
 }
 
-// Schedule tasks to run every day at 8:00 AM
-cron.schedule('0 8 * * *', () => {
-  console.log('[Scheduler] Running daily morning reminder cron job...');
-  sendDailyReminders();
-});
+if (!isVercel) {
+  // Schedule tasks to run every day at 8:00 AM
+  cron.schedule('0 8 * * *', () => {
+    console.log('[Scheduler] Running daily morning reminder cron job...');
+    sendDailyReminders();
+  });
 
-// Run a check 5 seconds after server startup for testing/visibility
-setTimeout(() => {
-  console.log('[Scheduler] Running initial task check on startup...');
-  sendDailyReminders();
-}, 5000);
+  // Run a check 5 seconds after server startup for testing/visibility
+  setTimeout(() => {
+    console.log('[Scheduler] Running initial task check on startup...');
+    sendDailyReminders();
+  }, 5000);
+}
+
+module.exports = app;
